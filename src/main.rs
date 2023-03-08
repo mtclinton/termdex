@@ -1,6 +1,11 @@
 use std::io;
 use serde::Deserialize;
 
+fn setup_db() {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut connection = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
