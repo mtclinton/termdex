@@ -39,14 +39,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[derive(Deserialize)]
 struct Data {
     name: String,
+    types: Vec<PokeType>,
 }
 
+#[derive(Deserialize)]
+struct PokeType {
+    #[serde(rename = "type")]
+    poketype: TypeName,
+}
+
+#[derive(Deserialize)]
+struct TypeName {
+    name: String,
+}
 
 async fn search_pokemon(pokemon_id: u32) -> Result<(), Box<dyn std::error::Error>> {
     show_pokemon(pokemon_id);
     let res = reqwest::get(format!("https://pokeapi.co/api/v2/pokemon/{}",pokemon_id)).await?;
 
     let body = res.json::<Data>().await?;
+    let mut pokemon_types = Vec::new();
+    for ptype in body.types {
+        pokemon_types.push(ptype.poketype.name);
+    }
     println!("Pokemon: {}", body.name);
+    println!("Pokemon type: {:#?}", pokemon_types);    
     Ok(())
 }
