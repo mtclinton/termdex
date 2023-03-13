@@ -11,7 +11,7 @@ fn show_pokemon(pokemon_id: u32) {
     let path = "pokemon.json";
     let data = fs::read_to_string(path).expect("Unable to read file");
     let res: serde_json::Value = serde_json::from_str(&data).expect("Unable to parse");
-    print!("{}", res[format!("{}",pokemon_id)])
+    print!("{}", res[format!("{}",pokemon_id)].as_str().unwrap())
 }
 
 
