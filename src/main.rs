@@ -3,7 +3,17 @@ use serde::Deserialize;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use std::env;
+use std::fs;
+
 mod pokeball;
+
+fn show_pokemon(pokemon_id: u32) {
+    let path = "pokemon.json";
+    let data = fs::read_to_string(path).expect("Unable to read file");
+    let res: serde_json::Value = serde_json::from_str(&data).expect("Unable to parse");
+    print!("{}", res[format!("{}",pokemon_id)])
+}
+
 
 fn setup_db() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -33,6 +43,7 @@ struct Data {
 
 
 async fn search_pokemon(pokemon_id: u32) -> Result<(), Box<dyn std::error::Error>> {
+    show_pokemon(pokemon_id);
     let res = reqwest::get(format!("https://pokeapi.co/api/v2/pokemon/{}",pokemon_id)).await?;
 
     let body = res.json::<Data>().await?;
