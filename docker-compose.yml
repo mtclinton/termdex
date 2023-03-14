@@ -22,7 +22,7 @@ services:
       context: ./
       dockerfile: ./Dockerfile
     volumes:
-      - ./:/diesel-pokemon
+      - ./:/pokemon
       - diesel-pokemon-target:/diesel/target
     depends_on:
       - database-pokemon

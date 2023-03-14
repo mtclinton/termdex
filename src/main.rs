@@ -1,3 +1,6 @@
+mod models;
+mod schema;
+
 use colored::Colorize;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -7,7 +10,8 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io;
-
+use models::*;
+use schema::*;
 mod pokeball;
 
 fn show_sprite(sprite: &str, poke_type: &str) {
@@ -47,12 +51,29 @@ fn setup_db() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
+    create(&mut connection);
 }
+
+fn create(connection: &mut PgConnection) {
+    let new_pokemon = NewPokemon {
+        pokemon_id: 1,
+        name: "blah".to_string(),
+        sprite: "".to_string(),
+    };
+
+    let inserted_row = diesel::insert_into(pokemon::table)
+        .values(&new_pokemon)
+        .get_result::<Pokemon>(connection);
+
+    println!("{:?}", inserted_row);
+}
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pokeball::show_pokeball();
     println!("Welcome to TermDex");
+    setup_db();
     loop {
         println!("Input a pokemon ID");
         let mut pokemon_id = String::new();
@@ -66,6 +87,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("Pokemon ID must be an integer");
         search_pokemon(pokemon_id).await?;
     }
+}
+
+#[derive(Deserialize)]
+struct PokemonData {
+    pokemon_id: u32,
+    name:   String,
+    spirte: String,
 }
 
 #[derive(Deserialize)]
