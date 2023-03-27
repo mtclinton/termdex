@@ -47,26 +47,7 @@ fn show_pokemon(pokemon_id: u32) -> String {
     return sprite;
 }
 
-fn setup_db() {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let mut connection = PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url));
-    create(&mut connection);
-}
 
-fn create(connection: &mut PgConnection) {
-    let new_pokemon = NewPokemon {
-        pokemon_id: 1,
-        name: "blah".to_string(),
-        sprite: "".to_string(),
-    };
-
-    let inserted_row = diesel::insert_into(pokemon::table)
-        .values(&new_pokemon)
-        .get_result::<Pokemon>(connection);
-
-    println!("{:?}", inserted_row);
-}
 
 
 #[tokio::main]
@@ -89,45 +70,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-#[derive(Deserialize)]
-struct PokemonData {
-    pokemon_id: u32,
-    name:   String,
-    spirte: String,
-}
 
-#[derive(Deserialize)]
-struct Data {
-    name: String,
-    types: Vec<PokeType>,
-}
 
-#[derive(Deserialize)]
-struct PokeType {
-    #[serde(rename = "type")]
-    poketype: TypeName,
-}
 
-#[derive(Deserialize)]
-struct TypeName {
-    name: String,
-}
 
-async fn search_pokemon(pokemon_id: u32) -> Result<(), Box<dyn std::error::Error>> {
-    let res = reqwest::get(format!("https://pokeapi.co/api/v2/pokemon/{}", pokemon_id)).await?;
 
-    let body = res.json::<Data>().await?;
-    let mut pokemon_types = Vec::new();
-    for ptype in body.types {
-        pokemon_types.push(ptype.poketype.name);
-    }
-    show_sprite(
-        &show_pokemon(pokemon_id),
-        pokemon_types
-            .choose(&mut rand::thread_rng())
-            .unwrap()
-            .as_str(),
-    );
-    println!("Pokemon: {}", body.name);
-    Ok(())
-}
+
