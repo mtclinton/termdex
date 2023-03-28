@@ -1,8 +1,15 @@
-fn setup_db() {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let mut connection = PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url));
-    create(&mut connection);
+
+
+
+
+fn setup_db(connection: &mut PgConnection) {
+    let pokemon_data = pokemon
+        .load::<Pokemon>(connection)
+        .expect("Error loading pokemon");
+    if pokemon_data.len() == 0 {
+        initialize_pokemon(&mut connection);
+    }
+    
 }
 
 fn create_pokemon(connection: &mut PgConnection, pokemon_id: u32, name: &str, sprite: &str) {
