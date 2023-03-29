@@ -52,6 +52,12 @@ fn show_pokemon(pokemon_id: u32) -> String {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut connection = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+    setup_db(&mut connection);
+
+
     pokeball::show_pokeball();
     println!("Welcome to TermDex");
     setup_db();
