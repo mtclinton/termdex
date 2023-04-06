@@ -9,6 +9,7 @@ pub struct Scraper {
     downloader: downloader::Downloader,
     visited_urls: Mutex<HashSet<String>>,
     path_map: Mutex<HashMap<String, String>>,
+    sprites: Mutex<serde_json::Value>,
 }
 
 impl Scraper {
@@ -33,6 +34,18 @@ impl Scraper {
             path_map: Mutex::new(HashMap::new()),
         }
     }
+
+    fn load_sprite(scraper: &Scraper,) {
+	    let path = "pokemon.json";
+	    let data = fs::read_to_string(path).expect("Unable to read file");
+	    scraper.sprite = serde_json::Value = serde_json::from_str(&data).expect("Unable to parse");
+
+	}
+
+	fn get_sprite(scraper: &Scraper, pokemon_id: u32) -> String{
+		scraper.sprites[format!("{}", pokemon_id)].as_str().unwrap().to_string()
+
+	}
 
     fn save_pokemon(scraper: &Scraper, data: PokemonAPIData, id: u64):
     	fmt!("{:#?}", data);
