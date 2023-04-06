@@ -43,6 +43,13 @@ impl Scraper {
         }
     }
 
+    /// Push a new URL into the channel
+    fn push(transmitter: &Sender<(Url, i32, i32)>, url: String, id: i32) {
+        if let Err(e) = transmitter.send((url, depth, ext_depth)) {
+            error!("Couldn't push to channel ! {}", e);
+        }
+    }
+
 
 	fn get_sprite(scraper: &Scraper, pokemon_id: u32) -> String{
 		let sprites = scraper.sprites.lock().unwrap();
@@ -67,7 +74,7 @@ impl Scraper {
     /// Process a single URL
     fn handle_url(
         scraper: &Scraper,
-        transmitter: &Sender<(String>,
+        transmitter: &Sender<(String, i32>,
         url: String,
     ) {
         match scraper.downloader.get(&url) {
@@ -96,7 +103,7 @@ impl Scraper {
     pub fn run(&mut self) {
         /* Push the origin URL and depth (0) through the channel */
         (1..151).map(
-        	|p| Scraper::push(&self.transmitter, format!("https://pokeapi.co/api/v2/pokemon/{}", p)
+            |p| Scraper::push(&self.transmitter, format!("https://pokeapi.co/api/v2/pokemon/{}", p), p)
 
         )
         
@@ -121,9 +128,9 @@ impl Scraper {
                                 }
                                 TryRecvError::Disconnected => panic!("{}", e),
                             },
-                            Ok((url)) => {
+                            Ok((url, id)) => {
                                 counter = 0;
-                                Scraper::handle_url(self_clone, &tx, url);
+                                Scraper::handle_url(self_clone, &tx, url, id);
                                 self_clone.sleep(&mut rng);
                             }
                         }
