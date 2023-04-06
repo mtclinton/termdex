@@ -51,7 +51,17 @@ impl Scraper {
 	}
 
     fn save_pokemon(scraper: &Scraper, data: PokemonAPIData, id: u64):
-    	fmt!("{:#?}", data);
+    	let sprite = scraper.get_sprite(id);
+    	let new_pokemon = NewPokemon {
+	        pokemon_id: id,
+	        name: PokemonAPIData.name,
+	        sprite: sprite,
+	    };
+	    conn = scraper.connection.lock().unwrap();
+
+	    let inserted_row = diesel::insert_into(pokemon::table)
+	        .values(&new_pokemon)
+	        .get_result::<Pokemon>(conn);
 
 
     /// Process a single URL
