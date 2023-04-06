@@ -1,4 +1,4 @@
-
+use diesel::pg::PgConnection;
 
 /// Producer and Consumer data structure. Handles the incoming requests and
 /// adds more as new URLs are found
@@ -10,6 +10,7 @@ pub struct Scraper {
     visited_urls: Mutex<HashSet<String>>,
     path_map: Mutex<HashMap<String, String>>,
     sprites: Mutex<serde_json::Value>,
+    connection: Mutex<PgConnection>
 }
 
 impl Scraper {
@@ -18,6 +19,11 @@ impl Scraper {
         let (tx, rx) = crossbeam::channel::unbounded();
 
         let mut args = args;
+        let path = "pokemon.json";
+	    let data = fs::read_to_string(path).expect("Unable to read file");
+	    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+	    let mut conn = PgConnection::establish(&database_url)
+	        .expect(&format!("Error connecting to {}", database_url));
 
         Scraper {
             downloader: downloader::Downloader::new(
@@ -32,18 +38,15 @@ impl Scraper {
             receiver: rx,
             visited_urls: Mutex::new(HashSet::new()),
             path_map: Mutex::new(HashMap::new()),
+            sprites: Mutex::new(serde_json::from_str(&data).expect("Unable to parse"));
+            connection: Mutex::new(conn)
         }
     }
 
-    fn load_sprite(scraper: &Scraper,) {
-	    let path = "pokemon.json";
-	    let data = fs::read_to_string(path).expect("Unable to read file");
-	    scraper.sprite = serde_json::Value = serde_json::from_str(&data).expect("Unable to parse");
-
-	}
 
 	fn get_sprite(scraper: &Scraper, pokemon_id: u32) -> String{
-		scraper.sprites[format!("{}", pokemon_id)].as_str().unwrap().to_string()
+		let sprites = scraper.sprites.lock().unwrap();
+		sprites[format!("{}", pokemon_id)].as_str().unwrap().to_string()
 
 	}
 
