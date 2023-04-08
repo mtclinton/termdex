@@ -1,4 +1,14 @@
 use diesel::pg::PgConnection;
+use std::collections::HashMap;
+use std::fs;
+use std::io;
+use std::env;
+use diesel::prelude::*;
+use crossbeam::channel::{Receiver, Sender, TryRecvError};
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::sync::Mutex;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct PokemonData {
@@ -12,8 +22,8 @@ struct PokemonData {
 /// Producer and Consumer data structure. Handles the incoming requests and
 /// adds more as new URLs are found
 pub struct Scraper {
-    transmitter: Sender<(String)>,
-    receiver: Receiver<(String)>,
+    transmitter: Sender<(String, i32>,
+    receiver: Receiver<(String, i32)>,
     downloader: downloader::Downloader,
     visited_urls: Mutex<HashSet<String>>,
     path_map: Mutex<HashMap<String, String>>,
@@ -25,8 +35,6 @@ impl Scraper {
     /// Create a new scraper with command line options
     pub fn new() -> Scraper {
         let (tx, rx) = crossbeam::channel::unbounded();
-
-        let mut args = args;
         let path = "pokemon.json";
 	    let data = fs::read_to_string(path).expect("Unable to read file");
 	    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -42,14 +50,14 @@ impl Scraper {
             receiver: rx,
             visited_urls: Mutex::new(HashSet::new()),
             path_map: Mutex::new(HashMap::new()),
-            sprites: Mutex::new(serde_json::from_str(&data).expect("Unable to parse"));
+            sprites: Mutex::new(serde_json::from_str(&data).expect("Unable to parse"))
             connection: Mutex::new(conn)
         }
     }
 
     /// Push a new URL into the channel
-    fn push(transmitter: &Sender<(Url, i32, i32)>, url: String, id: i32) {
-        if let Err(e) = transmitter.send((url, depth, ext_depth)) {
+    fn push(transmitter: &Sender<(&str, i32, i32)>, url: String, id: i32) {
+        if let Err(e) = transmitter.send((url, id)) {
             error!("Couldn't push to channel ! {}", e);
         }
     }

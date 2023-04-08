@@ -1,6 +1,6 @@
 mod models;
 mod schema;
-
+mod scraper;
 use colored::Colorize;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -13,8 +13,7 @@ use std::io;
 use models::*;
 use schema::*;
 use crate::pokemon::dsl::pokemon;
-use termdex::scraper::Scraper;
-use termdex::args::Args;
+use scraper::Scraper;
 mod pokeball;
 
 // fn show_sprite(sprite: &str, poke_type: &str) {
@@ -53,9 +52,8 @@ fn initialize_pokemon() {
         println!("Finished initializing pokemon database")
     } else {
         println!("Initializing pokemon database")
-        let args = Args::collect();
-        let mut scraper = Scraper::new(args);
-        scraper.run();
+        let mut scraper = Scraper::new();
+        // scraper.run();
         println!("Finished initializing pokemon database")
 
     }
