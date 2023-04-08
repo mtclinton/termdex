@@ -75,6 +75,7 @@ fn main() {
         .limit(1)
         .load::<Pokemon>(&mut connection)
         .expect("Error loading posts");
+    println!("{}", p[0].sprite);
     println!("{}", p[0].name);
     // loop {
     //     println!("Input a pokemon ID");

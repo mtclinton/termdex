@@ -15,5 +15,5 @@ pub struct Pokemon {
     pub id: i32,
     pub pokemon_id: i32,
     pub name: String,
-    pub sprite: Option<String>,
+    pub sprite: String,
 }
