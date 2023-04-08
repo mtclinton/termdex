@@ -7,6 +7,7 @@ use crossbeam::channel::{Receiver, Sender, TryRecvError};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Mutex;
+use std::sync::Arc;
 use serde::Deserialize;
 use crossbeam::thread;
  use std::time::Duration;
@@ -38,9 +39,8 @@ pub struct Scraper {
     receiver: Receiver<(String, u64)>,
     downloader: downloader::Downloader,
     visited_urls: Mutex<HashSet<String>>,
-    path_map: Mutex<HashMap<String, String>>,
     sprites: Mutex<serde_json::Value>,
-    connection: Mutex<PgConnection>
+    pokemon_data: Mutex<Vec<NewPokemon>>,
 }
 
 impl Scraper {
@@ -50,9 +50,7 @@ impl Scraper {
         let path = "pokemon.json";
 	    let data = fs::read_to_string(path).expect("Unable to read file");
 	    let sprite_data = serde_json::from_str(&data).expect("Unable to parse");
-	    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-	    let mut conn = PgConnection::establish(&database_url)
-	        .expect(&format!("Error connecting to {}", database_url));
+
 
         Scraper {
             downloader: downloader::Downloader::new(
@@ -62,14 +60,13 @@ impl Scraper {
             transmitter: tx,
             receiver: rx,
             visited_urls: Mutex::new(HashSet::new()),
-            path_map: Mutex::new(HashMap::new()),
             sprites: Mutex::new(sprite_data),
-            connection: Mutex::new(conn)
+            pokemon_data: Mutex::new(Vec::<NewPokemon>::new())
         }
     }
 
     /// Push a new URL into the channel
-    fn push(transmitter: &Sender<(&str, u64)>, url: &str, id: u64) {
+    fn push(transmitter: &Sender<(String, u64)>, url: String, id: u64) {
         if let Err(e) = transmitter.send((url, id)) {
             println!("Couldn't push to channel ! {}", e);
         }
@@ -89,18 +86,14 @@ impl Scraper {
 	        name: data.name,
 	        sprite: sprite,
 	    };
-	    let mut conn = scraper.connection.lock().unwrap();
-
-	    let inserted_row = diesel::insert_into(pokemon::table)
-	        .values(&new_pokemon)
-	        .get_result::<Pokemon>(*conn);
+		scraper.pokemon_data.lock().unwrap().push(new_pokemon);
+	    
 	}
 
 
     /// Process a single URL
     fn handle_url(
         scraper: &Scraper,
-        transmitter: &Sender<(String, u64)>,
         url: &str,
         id: u64
 
@@ -114,7 +107,7 @@ impl Scraper {
             }
         }
 
-        scraper.visited_urls.lock().unwrap().insert(url);
+        scraper.visited_urls.lock().unwrap().insert(url.to_string());
 
         println!("Visited: {}", url);
     }
@@ -152,7 +145,7 @@ impl Scraper {
                             },
                             Ok((url, id)) => {
                                 counter = 0;
-                                Scraper::handle_url(self_clone, &tx, url, id);
+                                Scraper::handle_url(self_clone, &url, id);
                                 self_clone.sleep(&mut rng);
                             }
                         }
@@ -161,6 +154,14 @@ impl Scraper {
             }
         })
         .unwrap();
+
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+	    let mut conn = PgConnection::establish(&database_url)
+	        .expect(&format!("Error connecting to {}", database_url));
+
+	    // let inserted_row = diesel::insert_into(pokemon::table)
+	    //     .values(&new_pokemon)
+	    //     .get_result::<Pokemon>(*conn);
     }
 
 
