@@ -1,9 +1,17 @@
 use diesel::pg::PgConnection;
 
+#[derive(Deserialize)]
+struct PokemonData {
+    pokemon_id: u32,
+    name:   String,
+    spirte: String,
+    types: Vec<String>,
+}
+
+
 /// Producer and Consumer data structure. Handles the incoming requests and
 /// adds more as new URLs are found
 pub struct Scraper {
-    args: args::Args,
     transmitter: Sender<(String)>,
     receiver: Receiver<(String)>,
     downloader: downloader::Downloader,
@@ -15,7 +23,7 @@ pub struct Scraper {
 
 impl Scraper {
     /// Create a new scraper with command line options
-    pub fn new(args: args::Args) -> Scraper {
+    pub fn new() -> Scraper {
         let (tx, rx) = crossbeam::channel::unbounded();
 
         let mut args = args;
@@ -27,13 +35,9 @@ impl Scraper {
 
         Scraper {
             downloader: downloader::Downloader::new(
-                args.tries,
-                &args.user_agent,
-                args.disable_certs_checks,
-                &args.auth,
-                &args.origin,
+                3,
+                format!("{}","termdex")
             ),
-            args,
             transmitter: tx,
             receiver: rx,
             visited_urls: Mutex::new(HashSet::new()),
