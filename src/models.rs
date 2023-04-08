@@ -2,6 +2,7 @@ use crate::schema::*;
 use diesel::prelude::*;
 use serde::Serialize;
 
+#[derive(Debug)]
 #[derive(Insertable)]
 #[table_name = "pokemon"]
 pub struct NewPokemon {

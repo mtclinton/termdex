@@ -116,13 +116,10 @@ impl Scraper {
 
     /// Run through the channel and complete into
     pub fn run(&mut self) {
-        /* Push the origin URL and depth (0) through the channel */
-        (1..151).map(
-            |p| Scraper::push(&self.transmitter, format!("https://pokeapi.co/api/v2/pokemon/{}", p), p)
-
-        );
+    	for p in Vec::from_iter(1..152).iter(){
+    		Scraper::push(&self.transmitter, format!("https://pokeapi.co/api/v2/pokemon/{}", p), *p)
+    	}
         
-
         thread::scope(|thread_scope| {
             for _ in 0..8 {
                 let tx = self.transmitter.clone();
@@ -155,13 +152,16 @@ impl Scraper {
         })
         .unwrap();
 
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-	    let mut conn = PgConnection::establish(&database_url)
-	        .expect(&format!("Error connecting to {}", database_url));
+
+		let mut pokemon = self.pokemon_data.lock().unwrap();
+     //    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+	    // let mut conn = PgConnection::establish(&database_url)
+	    //     .expect(&format!("Error connecting to {}", database_url));
 
 	    // let inserted_row = diesel::insert_into(pokemon::table)
 	    //     .values(&new_pokemon)
 	    //     .get_result::<Pokemon>(*conn);
+	    
     }
 
 

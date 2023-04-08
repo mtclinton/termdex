@@ -54,7 +54,10 @@ fn initialize_pokemon() {
     } else {
         println!("Initializing pokemon database");
         let mut scraper = Scraper::new();
-        // scraper.run();
+        println!("Initializing scraper");
+        scraper.run();
+        println!("Finished running scraper");
+
         println!("Finished initializing pokemon database");
 
     }
@@ -64,13 +67,11 @@ fn initialize_pokemon() {
 
 
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
 
     pokeball::show_pokeball();
     println!("Welcome to TermDex");
     initialize_pokemon();
-    Ok(())
     // loop {
     //     println!("Input a pokemon ID");
     //     let mut pokemon_id = String::new();
