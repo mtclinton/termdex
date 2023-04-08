@@ -1,20 +1,21 @@
+mod downloader;
 mod models;
 mod schema;
 mod scraper;
-mod downloader;
+use crate::pokemon::dsl::pokemon;
+use crate::schema::pokemon::pokemon_id;
 use colored::Colorize;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use models::*;
 use rand::seq::SliceRandom;
+use schema::*;
+use scraper::Scraper;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io;
-use models::*;
-use schema::*;
-use crate::pokemon::dsl::pokemon;
-use scraper::Scraper;
 mod pokeball;
 
 // fn show_sprite(sprite: &str, poke_type: &str) {
@@ -59,19 +60,22 @@ fn initialize_pokemon() {
         println!("Finished running scraper");
 
         println!("Finished initializing pokemon database");
-
     }
 }
 
-
-
-
-
 fn main() {
-
     pokeball::show_pokeball();
     println!("Welcome to TermDex");
     initialize_pokemon();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut connection = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+    let p = pokemon
+        .filter(pokemon_id.eq(2))
+        .limit(1)
+        .load::<Pokemon>(&mut connection)
+        .expect("Error loading posts");
+    println!("{}", p[0].name);
     // loop {
     //     println!("Input a pokemon ID");
     //     let mut pokemon_id = String::new();
@@ -86,10 +90,3 @@ fn main() {
     //     search_pokemon(pokemon_id).await?;
     // }
 }
-
-
-
-
-
-
-

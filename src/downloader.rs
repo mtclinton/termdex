@@ -17,7 +17,6 @@ pub struct TypeName {
     pub name: String,
 }
 
-
 ///A Downloader to download web content
 pub struct Downloader {
     client: reqwest::blocking::Client,
@@ -26,10 +25,7 @@ pub struct Downloader {
 
 impl Downloader {
     /// Create a new Downloader
-    pub fn new(
-        tries: usize,
-        user_agent: &str,
-    ) -> Downloader {
+    pub fn new(tries: usize, user_agent: &str) -> Downloader {
         Downloader {
             client: reqwest::blocking::ClientBuilder::new()
                 .cookie_store(true)
@@ -39,7 +35,6 @@ impl Downloader {
             tries,
         }
     }
-
 
     ///Download the content at this url
     fn make_request(&self, url: &str) -> Result<PokemonAPIData, reqwest::Error> {
@@ -69,6 +64,4 @@ impl Downloader {
 
         Err(error.unwrap())
     }
-
 }
-
