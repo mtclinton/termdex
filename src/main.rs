@@ -1,6 +1,7 @@
 mod models;
 mod schema;
 mod scraper;
+mod downloader;
 use colored::Colorize;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -49,12 +50,12 @@ fn initialize_pokemon() {
         .load::<Pokemon>(&mut connection)
         .expect("Error loading pokemon");
     if results.len() > 0 {
-        println!("Finished initializing pokemon database")
+        println!("Finished initializing pokemon database");
     } else {
-        println!("Initializing pokemon database")
+        println!("Initializing pokemon database");
         let mut scraper = Scraper::new();
         // scraper.run();
-        println!("Finished initializing pokemon database")
+        println!("Finished initializing pokemon database");
 
     }
 }

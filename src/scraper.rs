@@ -1,5 +1,4 @@
 use diesel::pg::PgConnection;
-use std::collections::HashMap;
 use std::fs;
 use std::io;
 use std::env;
@@ -9,21 +8,34 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Mutex;
 use serde::Deserialize;
+use crossbeam::thread;
+ use std::time::Duration;
+// use crate::{error, info, warn};
+use rand::Rng;
+use super::downloader;
+use super::schema::*;
+use super::models::*;
+
 
 #[derive(Deserialize)]
 struct PokemonData {
-    pokemon_id: u32,
+    pokemon_id: u64,
     name:   String,
     spirte: String,
     types: Vec<String>,
 }
 
+/// Maximum number of empty recv() from the channel
+static MAX_EMPTY_RECEIVES: usize = 10;/// Sleep duration on empty recv()
+static SLEEP_MILLIS: u64 = 100;
+static SLEEP_DURATION: Duration = Duration::from_millis(SLEEP_MILLIS);
+
 
 /// Producer and Consumer data structure. Handles the incoming requests and
 /// adds more as new URLs are found
 pub struct Scraper {
-    transmitter: Sender<(String, i32>,
-    receiver: Receiver<(String, i32)>,
+    transmitter: Sender<(String, u64)>,
+    receiver: Receiver<(String, u64)>,
     downloader: downloader::Downloader,
     visited_urls: Mutex<HashSet<String>>,
     path_map: Mutex<HashMap<String, String>>,
@@ -37,6 +49,7 @@ impl Scraper {
         let (tx, rx) = crossbeam::channel::unbounded();
         let path = "pokemon.json";
 	    let data = fs::read_to_string(path).expect("Unable to read file");
+	    let sprite_data = serde_json::from_str(&data).expect("Unable to parse");
 	    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 	    let mut conn = PgConnection::establish(&database_url)
 	        .expect(&format!("Error connecting to {}", database_url));
@@ -44,80 +57,77 @@ impl Scraper {
         Scraper {
             downloader: downloader::Downloader::new(
                 3,
-                format!("{}","termdex")
+                "termdex"
             ),
             transmitter: tx,
             receiver: rx,
             visited_urls: Mutex::new(HashSet::new()),
             path_map: Mutex::new(HashMap::new()),
-            sprites: Mutex::new(serde_json::from_str(&data).expect("Unable to parse"))
+            sprites: Mutex::new(sprite_data),
             connection: Mutex::new(conn)
         }
     }
 
     /// Push a new URL into the channel
-    fn push(transmitter: &Sender<(&str, i32, i32)>, url: String, id: i32) {
+    fn push(transmitter: &Sender<(&str, u64)>, url: &str, id: u64) {
         if let Err(e) = transmitter.send((url, id)) {
-            error!("Couldn't push to channel ! {}", e);
+            println!("Couldn't push to channel ! {}", e);
         }
     }
 
 
-	fn get_sprite(scraper: &Scraper, pokemon_id: u32) -> String{
+	fn get_sprite(scraper: &Scraper, pokemon_id: u64) -> String{
 		let sprites = scraper.sprites.lock().unwrap();
 		sprites[format!("{}", pokemon_id)].as_str().unwrap().to_string()
 
 	}
 
-    fn save_pokemon(scraper: &Scraper, data: PokemonAPIData, id: u64):
-    	let sprite = scraper.get_sprite(id);
+    fn save_pokemon(scraper: &Scraper, data: downloader::PokemonAPIData, id: u64) {
+    	let sprite = Scraper::get_sprite(scraper, id);
     	let new_pokemon = NewPokemon {
-	        pokemon_id: id,
-	        name: PokemonAPIData.name,
+	        pokemon_id: id as i32,
+	        name: data.name,
 	        sprite: sprite,
 	    };
-	    conn = scraper.connection.lock().unwrap();
+	    let mut conn = scraper.connection.lock().unwrap();
 
 	    let inserted_row = diesel::insert_into(pokemon::table)
 	        .values(&new_pokemon)
-	        .get_result::<Pokemon>(conn);
+	        .get_result::<Pokemon>(*conn);
+	}
 
 
     /// Process a single URL
     fn handle_url(
         scraper: &Scraper,
-        transmitter: &Sender<(String, i32>,
-        url: String,
+        transmitter: &Sender<(String, u64)>,
+        url: &str,
+        id: u64
+
     ) {
-        match scraper.downloader.get(&url) {
+        match scraper.downloader.get(url) {
             Ok(response) => {
-                scraper.save_pokemon(response);
+                Scraper::save_pokemon(scraper, response, id);
             }
             Err(e) => {
-                if !scraper.args.continue_on_error {
-                    error!("Couldn't download a page, {:?}", e);
-                } else {
-                    warn!("Couldn't download a page, {:?}", e);
-                }
+                println!("Couldn't download a page, {:?}", e);
             }
         }
 
         scraper.visited_urls.lock().unwrap().insert(url);
 
-        if scraper.args.verbose {
-            info!("Visited: {}", url);
-        }
+        println!("Visited: {}", url);
     }
 
 
 
-    /// Run through the channel and complete it
+    /// Run through the channel and complete into
     pub fn run(&mut self) {
         /* Push the origin URL and depth (0) through the channel */
         (1..151).map(
             |p| Scraper::push(&self.transmitter, format!("https://pokeapi.co/api/v2/pokemon/{}", p), p)
 
-        )
+        );
         
 
         thread::scope(|thread_scope| {
@@ -156,8 +166,8 @@ impl Scraper {
 
     /// Sleep the thread for a variable amount of seconds to avoid getting banned
     fn sleep(&self, rng: &mut rand::rngs::ThreadRng) {
-        let base_delay = self.args.delay;
-        let random_range = self.args.random_range;
+        let base_delay = 1;
+        let random_range = 2;
 
         if base_delay == 0 && random_range == 0 {
             return;
@@ -165,7 +175,7 @@ impl Scraper {
 
         // delay_range+1 because gen_range is exclusive on the upper limit
         let rand_delay_secs = rng.gen_range(0..random_range + 1);
-        let delay_duration = time::Duration::from_secs(base_delay + rand_delay_secs);
+        let delay_duration = Duration::from_secs(base_delay + rand_delay_secs);
         std::thread::sleep(delay_duration);
     }
 
