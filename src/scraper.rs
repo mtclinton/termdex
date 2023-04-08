@@ -153,14 +153,12 @@ impl Scraper {
         .unwrap();
 
 
-		let mut pokemon = self.pokemon_data.lock().unwrap();
-     //    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-	    // let mut conn = PgConnection::establish(&database_url)
-	    //     .expect(&format!("Error connecting to {}", database_url));
+		let pokemon = self.pokemon_data.lock().unwrap();
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+	    let mut conn = PgConnection::establish(&database_url)
+	        .expect(&format!("Error connecting to {}", database_url));
 
-	    // let inserted_row = diesel::insert_into(pokemon::table)
-	    //     .values(&new_pokemon)
-	    //     .get_result::<Pokemon>(*conn);
+	    diesel::insert_into(pokemon::table).values(&*pokemon).execute(&mut conn);
 	    
     }
 
