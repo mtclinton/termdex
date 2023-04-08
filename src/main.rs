@@ -18,6 +18,7 @@ use std::fs;
 use std::io;
 mod pokeball;
 
+
 // fn show_sprite(sprite: &str, poke_type: &str) {
 //     let poke_colors = HashMap::from([
 //         ("normal", (168, 167, 122)),
@@ -42,6 +43,7 @@ mod pokeball;
 //     let (r, g, b) = poke_colors.get(poke_type).unwrap();
 //     println!("{}", sprite.truecolor(*r, *g, *b));
 // }
+
 fn initialize_pokemon() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
@@ -70,24 +72,24 @@ fn main() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
-    let p = pokemon
-        .filter(pokemon_id.eq(2))
-        .limit(1)
-        .load::<Pokemon>(&mut connection)
-        .expect("Error loading posts");
-    println!("{}", p[0].sprite);
-    println!("{}", p[0].name);
-    // loop {
-    //     println!("Input a pokemon ID");
-    //     let mut pokemon_id = String::new();
 
-    //     io::stdin()
-    //         .read_line(&mut pokemon_id)
-    //         .expect("Failed to read line");
-    //     let pokemon_id: u32 = pokemon_id
-    //         .trim()
-    //         .parse()
-    //         .expect("Pokemon ID must be an integer");
-    //     search_pokemon(pokemon_id).await?;
-    // }
+    loop {
+        println!("Input a pokemon ID");
+        let mut input_id = String::new();
+
+        io::stdin()
+            .read_line(&mut input_id)
+            .expect("Failed to read line");
+        let pid: i32 = input_id
+            .trim()
+            .parse()
+            .expect("Pokemon ID must be an integer");
+        let p = pokemon
+            .filter(pokemon_id.eq(pid))
+            .limit(1)
+            .load::<Pokemon>(&mut connection)
+            .expect("Error loading posts");
+        println!("{}", p[0].sprite);
+        println!("{}", p[0].name);
+    }
 }
