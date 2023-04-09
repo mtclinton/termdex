@@ -84,6 +84,10 @@ fn main() {
             .trim()
             .parse()
             .expect("Pokemon ID must be an integer");
+        if pid <= 0 || pid > 151 {
+            println!("Invalid ID");
+            continue
+        }
         let pokemon_result = pokemon
             .filter(pokemon_id.eq(pid))
             .limit(1)
