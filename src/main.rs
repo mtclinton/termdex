@@ -84,12 +84,16 @@ fn main() {
             .trim()
             .parse()
             .expect("Pokemon ID must be an integer");
-        let p = pokemon
+        let pokemon_result = pokemon
             .filter(pokemon_id.eq(pid))
             .limit(1)
             .load::<Pokemon>(&mut connection)
             .expect("Error loading posts");
-        println!("{}", p[0].sprite);
-        println!("{}", p[0].name);
+        if pokemon_result.len() > 0 {
+            println!("{}", pokemon_result[0].sprite);
+            println!("{}", pokemon_result[0].name);
+        } else{
+            println!("Invalid ID");
+        }
     }
 }
