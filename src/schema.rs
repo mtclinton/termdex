@@ -5,6 +5,7 @@ diesel::table! {
         id -> Int4,
         pokemon_id -> Int4,
         name -> Text,
-        sprite -> Text,
+        large -> Nullable<Text>,
+        small -> Nullable<Text>,
     }
 }
