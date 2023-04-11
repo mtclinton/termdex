@@ -7,7 +7,8 @@ use serde::Serialize;
 pub struct NewPokemon {
     pub pokemon_id: i32,
     pub name: String,
-    pub sprite: String,
+    pub large: String,
+    pub small: String,
 }
 
 #[derive(Debug, Queryable, Serialize)]
@@ -15,5 +16,7 @@ pub struct Pokemon {
     pub id: i32,
     pub pokemon_id: i32,
     pub name: String,
-    pub sprite: String,
+    pub large: Option<String>,
+    pub small: Option<String>,
+
 }
