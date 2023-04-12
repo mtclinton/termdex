@@ -17,14 +17,6 @@ use super::models::*;
 use super::schema::*;
 use rand::Rng;
 
-#[derive(Deserialize)]
-struct PokemonData {
-    pokemon_id: u64,
-    name: String,
-    spirte: String,
-    types: Vec<String>,
-}
-
 /// Maximum number of empty recv() from the channel
 static MAX_EMPTY_RECEIVES: usize = 10;
 /// Sleep duration on empty recv()
