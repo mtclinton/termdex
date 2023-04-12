@@ -68,10 +68,7 @@ fn main() {
             .load::<Pokemon>(&mut connection)
             .expect("Error loading posts");
         if pokemon_result.len() > 0 {
-            let file_path = format!("sprites/large/{}", pokemon_result[0].name);
-            let sprite = fs::read_to_string(file_path)
-                .expect("Should have been able to read the sprite file");
-            println!("{}", sprite);
+            println!("{}", pokemon_result[0].large);
             println!("{}", pokemon_result[0].name);
         } else {
             println!("Invalid ID");

@@ -38,7 +38,7 @@ pub struct Scraper {
     receiver: Receiver<(String, u64)>,
     downloader: downloader::Downloader,
     visited_urls: Mutex<HashSet<String>>,
-    sprites: Mutex<serde_json::Value>,
+    // sprites: Mutex<serde_json::Value>,
     pokemon_data: Mutex<Vec<NewPokemon>>,
 }
 
@@ -46,16 +46,16 @@ impl Scraper {
     /// Create a new scraper with command line options
     pub fn new() -> Scraper {
         let (tx, rx) = crossbeam::channel::unbounded();
-        let path = "pokemon.json";
-        let data = fs::read_to_string(path).expect("Unable to read file");
-        let sprite_data = serde_json::from_str(&data).expect("Unable to parse");
+        // let path = "pokemon.json";
+        // let data = fs::read_to_string(path).expect("Unable to read file");
+        // let sprite_data = serde_json::from_str(&data).expect("Unable to parse");
 
         Scraper {
             downloader: downloader::Downloader::new(3, "termdex"),
             transmitter: tx,
             receiver: rx,
             visited_urls: Mutex::new(HashSet::new()),
-            sprites: Mutex::new(sprite_data),
+            // sprites: Mutex::new(sprite_data),
             pokemon_data: Mutex::new(Vec::<NewPokemon>::new()),
         }
     }
@@ -67,20 +67,22 @@ impl Scraper {
         }
     }
 
-    fn get_sprite(scraper: &Scraper, pokemon_id: u64) -> String {
-        let sprites = scraper.sprites.lock().unwrap();
-        sprites[format!("{}", pokemon_id)]
-            .as_str()
-            .unwrap()
-            .to_string()
-    }
+    // fn get_sprite(scraper: &Scraper, pokemon_id: u64) -> String {
+    //     let sprites = scraper.sprites.lock().unwrap();
+    //     sprites[format!("{}", pokemon_id)]
+    //         .as_str()
+    //         .unwrap()
+    //         .to_string()
+    // }
 
     fn save_pokemon(scraper: &Scraper, data: downloader::PokemonAPIData, id: u64) {
-        let sprite = Scraper::get_sprite(scraper, id);
+        // let sprite = Scraper::get_sprite(scraper, id);
         let new_pokemon = NewPokemon {
             pokemon_id: id as i32,
             name: data.name,
-            sprite: sprite,
+            large: "".to_string(),
+            small: "".to_string(),
+            // sprite: sprite,
         };
         scraper.pokemon_data.lock().unwrap().push(new_pokemon);
     }
