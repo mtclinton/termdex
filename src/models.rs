@@ -18,5 +18,4 @@ pub struct Pokemon {
     pub name: String,
     pub large: Option<String>,
     pub small: Option<String>,
-
 }

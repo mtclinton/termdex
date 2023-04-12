@@ -5,6 +5,13 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io;
+extern crate termdex;
+use serde_json::Value;
+use termdex::models::*;
+use termdex::schema::pokemon::dsl::pokemon;
+use termdex::schema::pokemon::large;
+use termdex::schema::pokemon::pokemon_id;
+use termdex::schema::pokemon::small;
 
 fn main() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -20,14 +27,9 @@ fn main() {
         let s_path = format!("sprites/small/{}", p.name);
         let l_data = fs::read_to_string(l_path).expect("Unable to read large sprite");
         let s_data = fs::read_to_string(s_path).expect("Unable to read small sprite");
-
-        let large_sprite_data = serde_json::from_str(&l_data).expect("Unable to parse large sprite");
-        let small_sprite_data = serde_json::from_str(&s_data).expect("Unable to parse small sprite");
         diesel::update(pokemon)
             .filter(pokemon_id.eq(p.pokemon_id))
-            .set(large.eq(l_data))
-            .set(small.eq(s_data))
+            .set((large.eq(l_data), small.eq(s_data)))
             .execute(&mut connection);
     }
-
 }

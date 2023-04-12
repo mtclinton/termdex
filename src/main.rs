@@ -60,7 +60,7 @@ fn main() {
             .expect("Pokemon ID must be an integer");
         if pid <= 0 || pid > 151 {
             println!("Invalid ID");
-            continue
+            continue;
         }
         let pokemon_result = pokemon
             .filter(pokemon_id.eq(pid))
@@ -69,10 +69,11 @@ fn main() {
             .expect("Error loading posts");
         if pokemon_result.len() > 0 {
             let file_path = format!("sprites/large/{}", pokemon_result[0].name);
-            let sprite = fs::read_to_string(file_path).expect("Should have been able to read the sprite file");
+            let sprite = fs::read_to_string(file_path)
+                .expect("Should have been able to read the sprite file");
             println!("{}", sprite);
             println!("{}", pokemon_result[0].name);
-        } else{
+        } else {
             println!("Invalid ID");
         }
     }
