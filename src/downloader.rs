@@ -4,6 +4,7 @@ use serde::Deserialize;
 pub struct PokemonAPIData {
     pub name: String,
     pub types: Vec<PokeType>,
+    pub stats: Vec<Stat>,
 }
 
 #[derive(Deserialize)]
@@ -15,6 +16,18 @@ pub struct PokeType {
 #[derive(Deserialize)]
 pub struct TypeName {
     pub name: String,
+}
+
+#[derive(Deserialize)]
+pub struct Stat {
+    base_stat: u64,
+    effort: u64,
+    stat: StatName,
+}
+
+#[derive(Deserialize)]
+pub struct StatName {
+    name: String
 }
 
 ///A Downloader to download web content
