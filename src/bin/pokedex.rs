@@ -94,19 +94,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .margin(2)
                 .constraints([Constraint::Percentage(80), Constraint::Percentage(20)].as_ref())
                 .split(size);
-            let large_pokemon = show_pokemon().expect("can't fetch pokmeon");
-            // let text = [Text::raw(large_pokemon[0].large.clone())];
-            // let sprite = Paragraph::new(text.iter());
-            // let x = "\x1b[0;31mTest string\x1b[0m";
-            let x = large_pokemon[0].large.clone();
-            // let buffer = std::fs::read(x).unwrap();
-            let output = x.into_text();
-            // let text = Text::raw(output);
-            let w = output.expect("can't parse");
-            // println!("{:?}",w );
-            // println!("===============================================");
-            let paragraph = Paragraph::new(w);
-            rect.render_widget(paragraph, chunks[0]);
+            let pokemon_db_result = show_pokemon().expect("can't fetch pokmeon");
+            let large_sprite = pokemon_db_result[0].large.clone();
+            let tui_sprite = large_sprite.into_text();
+            let text_sprite = tui_sprite.expect("can't parse sprite");
+            let paragraph_sprite = Paragraph::new(text_sprite);
+            rect.render_widget(paragraph_sprite, chunks[0]);
         })?;
 
         match rx.recv()? {
