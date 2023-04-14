@@ -27,7 +27,7 @@ pub struct Stat {
 
 #[derive(Deserialize)]
 pub struct StatName {
-    name: String
+    name: String,
 }
 
 ///A Downloader to download web content

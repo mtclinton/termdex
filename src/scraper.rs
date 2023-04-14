@@ -54,7 +54,6 @@ impl Scraper {
         }
     }
 
-
     fn save_pokemon(scraper: &Scraper, data: downloader::PokemonAPIData, id: u64) {
         let l_path = format!("sprites/large/{}", data.name);
         let s_path = format!("sprites/small/{}", data.name);

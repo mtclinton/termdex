@@ -17,5 +17,5 @@ pub struct Pokemon {
     pub pokemon_id: i32,
     pub name: String,
     pub large: String,
-    pub small: String
+    pub small: String,
 }
