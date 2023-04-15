@@ -16,7 +16,6 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io;
-mod pokeball;
 
 fn initialize_pokemon() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -40,7 +39,6 @@ fn initialize_pokemon() {
 }
 
 fn main() {
-    pokeball::show_pokeball();
     println!("Welcome to TermDex");
     initialize_pokemon();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
