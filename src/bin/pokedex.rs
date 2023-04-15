@@ -29,6 +29,8 @@ use tui::{
     },
     Terminal,
 };
+use tui_textarea::TextArea;
+
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -86,6 +88,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
+    let mut textarea = TextArea::default();
+
+
     loop {
         terminal.draw(|rect| {
             let size = rect.size();
@@ -99,7 +104,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let tui_sprite = large_sprite.into_text();
             let text_sprite = tui_sprite.expect("can't parse sprite");
             let paragraph_sprite = Paragraph::new(text_sprite);
+            let widget = textarea.widget();
             rect.render_widget(paragraph_sprite, chunks[0]);
+            rect.render_widget(widget, chunks[1]);
         })?;
 
         match rx.recv()? {
