@@ -1,6 +1,11 @@
 use ansi_to_tui::IntoText;
 use chrono::prelude::*;
 
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use rand::{distributions::Alphanumeric, prelude::*};
@@ -10,22 +15,15 @@ use std::fs;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
+use std::{error::Error, io};
 use termdex::models::*;
 use termdex::schema::pokemon::dsl::pokemon;
-use termdex::schema::pokemon::pokemon_id;
 use termdex::schema::pokemon::name;
+use termdex::schema::pokemon::pokemon_id;
 use thiserror::Error;
-use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-    execute,
-    terminal::{
-        disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
-    },
-};
-use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout, Alignment},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
     widgets::{Block, Borders, List, ListItem, Paragraph},
@@ -38,7 +36,6 @@ enum InputMode {
     Normal,
     Editing,
 }
-
 
 // #[derive(Error, Debug)]
 // pub enum Error {
@@ -57,14 +54,14 @@ fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
-    if pokemon_term.chars().all(char::is_numeric){
+    if pokemon_term.chars().all(char::is_numeric) {
         let pid = pokemon_term.parse::<i32>().unwrap();
         let pokemon_result = pokemon
             .filter(pokemon_id.eq(pid))
             .limit(1)
             .load::<Pokemon>(&mut connection)
             .expect("Error loading posts");
-            Ok(pokemon_result)
+        Ok(pokemon_result)
     } else {
         let pokemon_result = pokemon
             .filter(name.eq(pokemon_term))
@@ -73,7 +70,6 @@ fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
             .expect("Error loading posts");
         Ok(pokemon_result)
     }
-    
 }
 
 /// App holds the state of the application
@@ -156,20 +152,15 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {           
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .margin(2)
-        .constraints(
-            [
-                Constraint::Percentage(70), Constraint::Percentage(30)
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
         .split(f.size());
 
     let pokemon_db_result = show_pokemon(app.pokemon_search.clone()).expect("can't fetch pokmeon");
-    if pokemon_db_result.len() > 0{
+    if pokemon_db_result.len() > 0 {
         let large_sprite = pokemon_db_result[0].large.clone();
         let tui_sprite = large_sprite.into_text();
         let text_sprite = tui_sprite.expect("can't parse sprite");
@@ -233,15 +224,10 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
             f.set_cursor(
                 // Put cursor past the end of the input text
-                chunks[1].x
-                    + ((app.input.visual_cursor()).max(scroll) - scroll) as u16
-                    + 1,
+                chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
                 // Move one line down, from the border to the input line
                 chunks[1].y + 1,
             )
         }
     }
-    
-
 }
-
