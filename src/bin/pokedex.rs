@@ -1,7 +1,7 @@
 use ansi_to_tui::IntoText;
 use chrono::prelude::*;
 use crossterm::{
-    event::{self, Event as CEvent, KeyCode},
+    event::{self, Event , read, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use diesel::pg::PgConnection;
@@ -29,7 +29,6 @@ use tui::{
     },
     Terminal,
 };
-use tui_textarea::TextArea;
 
 
 #[derive(Error, Debug)]
@@ -40,10 +39,10 @@ pub enum Error {
     ParseDBError(#[from] serde_json::Error),
 }
 
-enum Event<I> {
-    Input(I),
-    Tick,
-}
+// enum Event<I> {
+//     Input(I),
+//     Tick,
+// }
 
 fn show_pokemon() -> Result<Vec<Pokemon>, Error> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -60,35 +59,34 @@ fn show_pokemon() -> Result<Vec<Pokemon>, Error> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode().expect("can run in raw mode");
 
-    let (tx, rx) = mpsc::channel();
-    let tick_rate = Duration::from_millis(200);
-    thread::spawn(move || {
-        let mut last_tick = Instant::now();
-        loop {
-            let timeout = tick_rate
-                .checked_sub(last_tick.elapsed())
-                .unwrap_or_else(|| Duration::from_secs(0));
+    // let (tx, rx) = mpsc::channel();
+    // let tick_rate = Duration::from_millis(200);
+    // thread::spawn(move || {
+    //     let mut last_tick = Instant::now();
+    //     loop {
+    //         let timeout = tick_rate
+    //             .checked_sub(last_tick.elapsed())
+    //             .unwrap_or_else(|| Duration::from_secs(0));
 
-            if event::poll(timeout).expect("poll works") {
-                if let CEvent::Key(key) = event::read().expect("can read events") {
-                    tx.send(Event::Input(key)).expect("can send events");
-                }
-            }
+    //         if event::poll(timeout).expect("poll works") {
+    //             if let CEvent::Key(key) = event::read().expect("can read events") {
+    //                 tx.send(Event::Input(key)).expect("can send events");
+    //             }
+    //         }
 
-            if last_tick.elapsed() >= tick_rate {
-                if let Ok(_) = tx.send(Event::Tick) {
-                    last_tick = Instant::now();
-                }
-            }
-        }
-    });
+    //         if last_tick.elapsed() >= tick_rate {
+    //             if let Ok(_) = tx.send(Event::Tick) {
+    //                 last_tick = Instant::now();
+    //             }
+    //         }
+    //     }
+    // });
 
     let stdout = io::stdout();
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let mut textarea = TextArea::default();
 
 
     loop {
@@ -104,22 +102,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let tui_sprite = large_sprite.into_text();
             let text_sprite = tui_sprite.expect("can't parse sprite");
             let paragraph_sprite = Paragraph::new(text_sprite);
-            let widget = textarea.widget();
             rect.render_widget(paragraph_sprite, chunks[0]);
-            rect.render_widget(widget, chunks[1]);
         })?;
 
-        match rx.recv()? {
-            Event::Input(event) => match event.code {
-                KeyCode::Char('q') => {
-                    disable_raw_mode()?;
-                    terminal.show_cursor()?;
-                    break;
-                }
-                _ => {}
-            },
-            Event::Tick => {}
+        // match rx.recv()? {
+        //     Event::Input(event) => match event.code {
+        //         KeyCode::Char('q') => {
+        //             disable_raw_mode()?;
+        //             terminal.show_cursor()?;
+        //             break;
+        //         }
+        //         _ => {
+        //             textarea.input(event);
+        //         }
+        //     },if let Event::Key(key) = read()? {
+        if let Event::Key(key) = read()? {
+            // Your own key mapping to break the event loop
+            if key.code == KeyCode::Esc {
+                disable_raw_mode()?;
+                terminal.show_cursor()?;
+                break;
+            }
+            // `TextArea::input` can directly handle key events from backends and update the editor state
+            // textarea.input(key);
         }
+
     }
 
     Ok(())

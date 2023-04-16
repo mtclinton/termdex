@@ -15,9 +15,8 @@ rand = "0.8.5"
 colored = "2.0.0"
 crossbeam = "0.8.2"
 crossterm = "0.26.1"
-tui = "0.19.0"
+tui = { package = "ratatui" }
 chrono = "0.4.24"
 thiserror = "1.0.40"
-ansi-to-tui = "2.0.1"
-tui-textarea = "0.2.0"
+ansi-to-tui = "3.0.0"
 
