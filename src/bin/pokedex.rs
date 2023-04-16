@@ -1,16 +1,12 @@
 use ansi_to_tui::IntoText;
 use chrono::prelude::*;
-use crossterm::{
-    event::{self, Event , read, KeyCode},
-    terminal::{disable_raw_mode, enable_raw_mode},
-};
+
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use rand::{distributions::Alphanumeric, prelude::*};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
-use std::io;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -18,33 +14,45 @@ use termdex::models::*;
 use termdex::schema::pokemon::dsl::pokemon;
 use termdex::schema::pokemon::pokemon_id;
 use thiserror::Error;
-use tui::text::Text;
-use tui::{
-    backend::CrosstermBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{
-        Block, BorderType, Borders, Cell, List, ListItem, ListState, Paragraph, Row, Table, Tabs,
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    execute,
+    terminal::{
+        disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
     },
-    Terminal,
 };
+use std::{error::Error, io};
+use tui::{
+    backend::{Backend, CrosstermBackend},
+    layout::{Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans, Text},
+    widgets::{Block, Borders, List, ListItem, Paragraph},
+    Frame, Terminal,
+};
+use tui_input::backend::crossterm::EventHandler;
+use tui_input::Input;
 
-
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("error reading the DB file: {0}")]
-    ReadDBError(#[from] io::Error),
-    #[error("error parsing the DB file: {0}")]
-    ParseDBError(#[from] serde_json::Error),
+enum InputMode {
+    Normal,
+    Editing,
 }
+
+
+// #[derive(Error, Debug)]
+// pub enum Error {
+//     #[error("error reading the DB file: {0}")]
+//     ReadDBError(#[from] io::Error),
+//     #[error("error parsing the DB file: {0}")]
+//     ParseDBError(#[from] serde_json::Error),
+// }
 
 // enum Event<I> {
 //     Input(I),
 //     Tick,
 // }
 
-fn show_pokemon() -> Result<Vec<Pokemon>, Error> {
+fn show_pokemon() -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
@@ -56,78 +64,157 @@ fn show_pokemon() -> Result<Vec<Pokemon>, Error> {
     Ok(pokemon_result)
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    enable_raw_mode().expect("can run in raw mode");
+/// App holds the state of the application
+struct App {
+    /// Current value of the input box
+    input: Input,
+    /// Current input mode
+    input_mode: InputMode,
+}
 
-    // let (tx, rx) = mpsc::channel();
-    // let tick_rate = Duration::from_millis(200);
-    // thread::spawn(move || {
-    //     let mut last_tick = Instant::now();
-    //     loop {
-    //         let timeout = tick_rate
-    //             .checked_sub(last_tick.elapsed())
-    //             .unwrap_or_else(|| Duration::from_secs(0));
+impl Default for App {
+    fn default() -> App {
+        App {
+            input: Input::default(),
+            input_mode: InputMode::Normal,
+        }
+    }
+}
 
-    //         if event::poll(timeout).expect("poll works") {
-    //             if let CEvent::Key(key) = event::read().expect("can read events") {
-    //                 tx.send(Event::Input(key)).expect("can send events");
-    //             }
-    //         }
-
-    //         if last_tick.elapsed() >= tick_rate {
-    //             if let Ok(_) = tx.send(Event::Tick) {
-    //                 last_tick = Instant::now();
-    //             }
-    //         }
-    //     }
-    // });
-
-    let stdout = io::stdout();
+fn main() -> Result<(), Box<dyn Error>> {
+    // setup terminal
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    terminal.clear()?;
 
+    // create app and run it
+    let app = App::default();
+    let res = run_app(&mut terminal, app);
 
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
 
-    loop {
-        terminal.draw(|rect| {
-            let size = rect.size();
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(2)
-                .constraints([Constraint::Percentage(80), Constraint::Percentage(20)].as_ref())
-                .split(size);
-            let pokemon_db_result = show_pokemon().expect("can't fetch pokmeon");
-            let large_sprite = pokemon_db_result[0].large.clone();
-            let tui_sprite = large_sprite.into_text();
-            let text_sprite = tui_sprite.expect("can't parse sprite");
-            let paragraph_sprite = Paragraph::new(text_sprite);
-            rect.render_widget(paragraph_sprite, chunks[0]);
-        })?;
-
-        // match rx.recv()? {
-        //     Event::Input(event) => match event.code {
-        //         KeyCode::Char('q') => {
-        //             disable_raw_mode()?;
-        //             terminal.show_cursor()?;
-        //             break;
-        //         }
-        //         _ => {
-        //             textarea.input(event);
-        //         }
-        //     },if let Event::Key(key) = read()? {
-        if let Event::Key(key) = read()? {
-            // Your own key mapping to break the event loop
-            if key.code == KeyCode::Esc {
-                disable_raw_mode()?;
-                terminal.show_cursor()?;
-                break;
-            }
-            // `TextArea::input` can directly handle key events from backends and update the editor state
-            // textarea.input(key);
-        }
-
+    if let Err(err) = res {
+        println!("{:?}", err)
     }
 
     Ok(())
 }
+
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+    loop {
+        terminal.draw(|f| ui(f, &mut app))?;
+
+        if let Event::Key(key) = event::read()? {
+            match app.input_mode {
+                InputMode::Normal => match key.code {
+                    KeyCode::Char('e') => {
+                        app.input_mode = InputMode::Editing;
+                    }
+                    KeyCode::Char('q') => {
+                        return Ok(());
+                    }
+                    _ => {}
+                },
+                InputMode::Editing => match key.code {
+                    KeyCode::Enter => {
+                        // run query
+                        app.input.reset();
+                    }
+                    KeyCode::Esc => {
+                        app.input_mode = InputMode::Normal;
+                    }
+                    _ => {
+                        app.input.handle_event(&Event::Key(key));
+                    }
+                },
+            }
+        }
+    }
+}
+
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {           
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(2)
+        .constraints(
+            [
+                Constraint::Percentage(10), Constraint::Percentage(20), Constraint::Percentage(70)
+            ]
+            .as_ref(),
+        )
+        .split(f.size());
+
+    let (msg, style) = match app.input_mode {
+        InputMode::Normal => (
+            vec![
+                Span::raw("Press "),
+                Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to exit, "),
+                Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to start editing."),
+            ],
+            Style::default().add_modifier(Modifier::RAPID_BLINK),
+        ),
+        InputMode::Editing => (
+            vec![
+                Span::raw("Press "),
+                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to stop editing, "),
+                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to record the message"),
+            ],
+            Style::default(),
+        ),
+    };
+    let mut text = Text::from(Spans::from(msg));
+    text.patch_style(style);
+    let help_message = Paragraph::new(text);
+    f.render_widget(help_message, chunks[0]);
+
+    let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
+
+    let scroll = app.input.visual_scroll(width as usize);
+    let input = Paragraph::new(app.input.value())
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::Editing => Style::default().fg(Color::Yellow),
+        })
+        .scroll((0, scroll as u16))
+        .block(Block::default().borders(Borders::ALL).title("Input"));
+    f.render_widget(input, chunks[1]);
+    match app.input_mode {
+        InputMode::Normal =>
+            // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
+            {}
+
+        InputMode::Editing => {
+            // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
+            f.set_cursor(
+                // Put cursor past the end of the input text
+                chunks[1].x
+                    + ((app.input.visual_cursor()).max(scroll) - scroll) as u16
+                    + 1,
+                // Move one line down, from the border to the input line
+                chunks[1].y + 1,
+            )
+        }
+    }
+    let pokemon_db_result = show_pokemon().expect("can't fetch pokmeon");
+    let large_sprite = pokemon_db_result[0].large.clone();
+    let tui_sprite = large_sprite.into_text();
+    let text_sprite = tui_sprite.expect("can't parse sprite");
+    let paragraph_sprite = Paragraph::new(text_sprite);
+    f.render_widget(paragraph_sprite, chunks[2]);
+
+
+}
+
