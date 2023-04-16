@@ -13,6 +13,7 @@ use std::time::{Duration, Instant};
 use termdex::models::*;
 use termdex::schema::pokemon::dsl::pokemon;
 use termdex::schema::pokemon::pokemon_id;
+use termdex::schema::pokemon::name;
 use thiserror::Error;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
@@ -24,7 +25,7 @@ use crossterm::{
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Alignment},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
     widgets::{Block, Borders, List, ListItem, Paragraph},
@@ -52,16 +53,27 @@ enum InputMode {
 //     Tick,
 // }
 
-fn show_pokemon(pid: i32) -> Result<Vec<Pokemon>, Box<dyn Error>> {
+fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
-    let pokemon_result = pokemon
-        .filter(pokemon_id.eq(pid))
-        .limit(1)
-        .load::<Pokemon>(&mut connection)
-        .expect("Error loading posts");
-    Ok(pokemon_result)
+    if pokemon_term.chars().all(char::is_numeric){
+        let pid = pokemon_term.parse::<i32>().unwrap();
+        let pokemon_result = pokemon
+            .filter(pokemon_id.eq(pid))
+            .limit(1)
+            .load::<Pokemon>(&mut connection)
+            .expect("Error loading posts");
+            Ok(pokemon_result)
+    } else {
+        let pokemon_result = pokemon
+            .filter(name.eq(pokemon_term))
+            .limit(1)
+            .load::<Pokemon>(&mut connection)
+            .expect("Error loading posts");
+        Ok(pokemon_result)
+    }
+    
 }
 
 /// App holds the state of the application
@@ -70,7 +82,7 @@ struct App {
     input: Input,
     /// Current input mode
     input_mode: InputMode,
-    pokemon_search: i32
+    pokemon_search: String,
 }
 
 impl Default for App {
@@ -78,7 +90,7 @@ impl Default for App {
         App {
             input: Input::default(),
             input_mode: InputMode::Normal,
-            pokemon_search: 1,
+            pokemon_search: "5".to_string(),
         }
     }
 }
@@ -128,8 +140,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 },
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
-                        let pid: i32 = app.input.value().parse::<i32>().unwrap();
-                        app.pokemon_search = pid;
+                        let p_input = app.input.value();
+                        app.pokemon_search = p_input.to_string();
                         app.input.reset();
                     }
                     KeyCode::Esc => {
@@ -146,15 +158,33 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {           
     let chunks = Layout::default()
-        .direction(Direction::Vertical)
+        .direction(Direction::Horizontal)
         .margin(2)
         .constraints(
             [
-                Constraint::Percentage(10), Constraint::Percentage(20), Constraint::Percentage(70)
+                Constraint::Percentage(70), Constraint::Percentage(30)
             ]
             .as_ref(),
         )
         .split(f.size());
+
+    let pokemon_db_result = show_pokemon(app.pokemon_search.clone()).expect("can't fetch pokmeon");
+    if pokemon_db_result.len() > 0{
+        let large_sprite = pokemon_db_result[0].large.clone();
+        let tui_sprite = large_sprite.into_text();
+        let text_sprite = tui_sprite.expect("can't parse sprite");
+        let paragraph_sprite = Paragraph::new(text_sprite).alignment(Alignment::Center);
+        f.render_widget(paragraph_sprite, chunks[0]);
+    } else {
+        let paragraph_sprite = Paragraph::new("Pokemon not found.");
+        f.render_widget(paragraph_sprite, chunks[0]);
+    }
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(2)
+        .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
+        .split(chunks[1]);
 
     let (msg, style) = match app.input_mode {
         InputMode::Normal => (
@@ -211,13 +241,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             )
         }
     }
-    let pokemon_db_result = show_pokemon(app.pokemon_search).expect("can't fetch pokmeon");
-    let large_sprite = pokemon_db_result[0].large.clone();
-    let tui_sprite = large_sprite.into_text();
-    let text_sprite = tui_sprite.expect("can't parse sprite");
-    let paragraph_sprite = Paragraph::new(text_sprite);
-    f.render_widget(paragraph_sprite, chunks[2]);
-
+    
 
 }
 
