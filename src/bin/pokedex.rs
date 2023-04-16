@@ -52,12 +52,12 @@ enum InputMode {
 //     Tick,
 // }
 
-fn show_pokemon() -> Result<Vec<Pokemon>, Box<dyn Error>> {
+fn show_pokemon(pid: i32) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
     let pokemon_result = pokemon
-        .filter(pokemon_id.eq(4))
+        .filter(pokemon_id.eq(pid))
         .limit(1)
         .load::<Pokemon>(&mut connection)
         .expect("Error loading posts");
@@ -70,6 +70,7 @@ struct App {
     input: Input,
     /// Current input mode
     input_mode: InputMode,
+    pokemon_search: i32
 }
 
 impl Default for App {
@@ -77,6 +78,7 @@ impl Default for App {
         App {
             input: Input::default(),
             input_mode: InputMode::Normal,
+            pokemon_search: 1,
         }
     }
 }
@@ -208,7 +210,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             )
         }
     }
-    let pokemon_db_result = show_pokemon().expect("can't fetch pokmeon");
+    let pokemon_db_result = show_pokemon(app.pokemon_search).expect("can't fetch pokmeon");
     let large_sprite = pokemon_db_result[0].large.clone();
     let tui_sprite = large_sprite.into_text();
     let text_sprite = tui_sprite.expect("can't parse sprite");
