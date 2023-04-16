@@ -128,7 +128,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 },
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
-                        // run query
+                        let pid: i32 = app.input.value().parse::<i32>().unwrap();
+                        app.pokemon_search = pid;
                         app.input.reset();
                     }
                     KeyCode::Esc => {
