@@ -23,7 +23,7 @@ use termdex::schema::pokemon::pokemon_id;
 use thiserror::Error;
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
     widgets::{Block, Borders, List, ListItem, Paragraph},
@@ -86,7 +86,7 @@ impl Default for App {
         App {
             input: Input::default(),
             input_mode: InputMode::Normal,
-            pokemon_search: "5".to_string(),
+            pokemon_search: "25".to_string(),
         }
     }
 }
@@ -159,13 +159,29 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
         .split(f.size());
 
+
+
     let pokemon_db_result = show_pokemon(app.pokemon_search.clone()).expect("can't fetch pokmeon");
     if pokemon_db_result.len() > 0 {
         let large_sprite = pokemon_db_result[0].large.clone();
         let tui_sprite = large_sprite.into_text();
         let text_sprite = tui_sprite.expect("can't parse sprite");
-        let paragraph_sprite = Paragraph::new(text_sprite).alignment(Alignment::Center);
-        f.render_widget(paragraph_sprite, chunks[0]);
+        let paragraph_sprite = Paragraph::new(text_sprite.clone()).alignment(Alignment::Center);
+        // f.render_widget(paragraph_sprite, chunks[0]);
+        let width = chunks[0].width;
+        let height = chunks[0].height;
+        let sprite_height = text_sprite.clone().lines.len();
+        let mut sprite_width = 0;
+        for line in text_sprite.clone().lines{
+           if line.width() > sprite_width {
+                sprite_width = line.width();
+           }
+        }
+        // let block = Block::default().title(format!("{:#?}", text_sprite.clone().lines.iter().take(3)));
+        let sprite_x = ((width as u16 - sprite_width as u16)/2);
+        let sprite_y = ((height as u16 - sprite_height as u16)/2);
+        let area = Rect::new(sprite_x, sprite_y, sprite_width as u16, sprite_height as u16);
+        f.render_widget(paragraph_sprite, area);
     } else {
         let paragraph_sprite = Paragraph::new("Pokemon not found.");
         f.render_widget(paragraph_sprite, chunks[0]);
@@ -181,9 +197,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         InputMode::Normal => (
             vec![
                 Span::raw("Press "),
-                Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+                Span::styled("q", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
                 Span::raw(" to exit, "),
-                Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
+                Span::styled("e", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
                 Span::raw(" to start editing."),
             ],
             Style::default().add_modifier(Modifier::RAPID_BLINK),
@@ -191,9 +207,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         InputMode::Editing => (
             vec![
                 Span::raw("Press "),
-                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                Span::styled("Esc", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
                 Span::raw(" to stop editing, "),
-                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                Span::styled("Enter", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
                 Span::raw(" to record the message"),
             ],
             Style::default(),
@@ -209,8 +225,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let scroll = app.input.visual_scroll(width as usize);
     let input = Paragraph::new(app.input.value())
         .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Yellow),
+            InputMode::Normal => Style::default().fg(Color::Red),
+            InputMode::Editing => Style::default().fg(Color::Red),
         })
         .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title("Input"));
