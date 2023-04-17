@@ -37,18 +37,6 @@ enum InputMode {
     Editing,
 }
 
-// #[derive(Error, Debug)]
-// pub enum Error {
-//     #[error("error reading the DB file: {0}")]
-//     ReadDBError(#[from] io::Error),
-//     #[error("error parsing the DB file: {0}")]
-//     ParseDBError(#[from] serde_json::Error),
-// }
-
-// enum Event<I> {
-//     Input(I),
-//     Tick,
-// }
 
 fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -78,6 +66,7 @@ struct App {
     input: Input,
     /// Current input mode
     input_mode: InputMode,
+    /// Current search value for pokemon
     pokemon_search: String,
 }
 
@@ -175,7 +164,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 sprite_width = line.width();
             }
         }
-        // let block = Block::default().title(format!("{:#?}", text_sprite.clone().lines.iter().take(3)));
         let sprite_x = ((width as u16 - sprite_width as u16) / 2);
         let sprite_y = ((height as u16 - sprite_height as u16) / 2);
         let area = Rect::new(
