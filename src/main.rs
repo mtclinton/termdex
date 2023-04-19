@@ -165,7 +165,24 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
+fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .margin(2)
+        .constraints([Constraint::Percentage(100)].as_ref())
+        .split(f.size());
+    let border_string = "[38;2;220;20;60m█"
+        .to_string()
+        .repeat(chunks[0].width as usize);
+    let border_text = border_string.into_text();
+    let border_enc = border_text.expect("can't parse border");
+    let border_tui = Paragraph::new(border_enc.clone());
+    let area = Rect::new(0, 0, chunks[0].width, 1);
+    f.render_widget(border_tui, area);
+}
+
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+    show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .margin(2)
@@ -201,14 +218,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         let paragraph_sprite = Paragraph::new("Pokemon not found.");
         f.render_widget(paragraph_sprite, chunks[0]);
     }
-    let border_string = "[38;2;220;20;60m█"
-        .to_string()
-        .repeat(chunks[0].width as usize);
-    let border_text = border_string.into_text();
-    let border_enc = border_text.expect("can't parse border");
-    let border_tui = Paragraph::new(border_enc.clone());
-    let area = Rect::new(0, 0, chunks[0].width, 1);
-    f.render_widget(border_tui, area);
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
