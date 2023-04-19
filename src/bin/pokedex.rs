@@ -37,7 +37,6 @@ enum InputMode {
     Editing,
 }
 
-
 fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)

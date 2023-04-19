@@ -3,16 +3,16 @@ mod models;
 mod schema;
 mod scraper;
 use crate::pokemon::dsl::pokemon;
-use crate::schema::pokemon::pokemon_id;
 use crate::schema::pokemon::name;
+use crate::schema::pokemon::pokemon_id;
 use ansi_to_tui::IntoText;
 use chrono::prelude::*;
+use colored::Colorize;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use colored::Colorize;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use models::*;
@@ -39,7 +39,6 @@ enum InputMode {
     Normal,
     Editing,
 }
-
 
 fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -103,7 +102,6 @@ fn initialize_pokemon() {
         println!("Finished initializing pokemon database");
     }
 }
-
 
 fn main() -> Result<(), Box<dyn Error>> {
     initialize_pokemon();
