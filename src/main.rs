@@ -40,6 +40,8 @@ enum InputMode {
     Editing,
 }
 
+
+
 fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
@@ -105,7 +107,7 @@ fn initialize_pokemon() {
 
 fn main() -> Result<(), Box<dyn Error>> {
     initialize_pokemon();
-    // setup terminal
+    //setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -188,8 +190,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 sprite_width = line.width();
             }
         }
-        let sprite_x = ((width as u16 - sprite_width as u16) / 2);
-        let sprite_y = ((height as u16 - sprite_height as u16) / 2);
+        let sprite_x = (width as u16 - sprite_width as u16) / 2;
+        let sprite_y = (height as u16 - sprite_height as u16) / 2;
         let area = Rect::new(
             sprite_x,
             sprite_y,
@@ -201,6 +203,17 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         let paragraph_sprite = Paragraph::new("Pokemon not found.");
         f.render_widget(paragraph_sprite, chunks[0]);
     }
+    let border_char = "[38;2;220;20;60m█";  
+    let border_char_text = border_char.into_text();
+    let border_enc = border_char_text.expect("can't parse border");
+    let border_tui = Paragraph::new(border_enc.clone());
+    let area = Rect::new(
+            0,
+            0,
+            1,
+            1,
+        );
+    f.render_widget(border_tui, area);
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
