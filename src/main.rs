@@ -179,10 +179,8 @@ fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
     let border_tui = Paragraph::new(border_enc.clone());
     let area = Rect::new(0, 0, chunks[0].width, 1);
     f.render_widget(border_tui.clone(), area);
-    for y in 0..chunks[0].height{
-        let border = "[38;2;220;20;60m█"
-        .to_string()
-        .repeat(6 as usize);
+    for y in 0..chunks[0].height {
+        let border = "[38;2;220;20;60m█".to_string().repeat(6 as usize);
         let b = border.into_text();
         let b2 = b.expect("can't parse border");
         let b3 = Paragraph::new(b2.clone());
@@ -205,7 +203,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         let large_sprite = pokemon_db_result[0].large.clone();
         let tui_sprite = large_sprite.into_text();
         let text_sprite = tui_sprite.expect("can't parse sprite");
-        let paragraph_sprite = Paragraph::new(text_sprite.clone()).style(Style::default().fg(Color::Blue)).block(Block::default().borders(Borders::ALL));
+        let paragraph_sprite = Paragraph::new(text_sprite.clone())
+            .style(Style::default().fg(Color::Blue))
+            .block(Block::default().borders(Borders::ALL));
 
         // f.render_widget(paragraph_sprite, chunks[0]);
         let width = chunks[0].width;
