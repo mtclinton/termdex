@@ -168,7 +168,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .margin(2)
+        .margin(1)
         .constraints([Constraint::Percentage(100)].as_ref())
         .split(f.size());
     let large_border = "[38;2;220;20;60m█"
@@ -180,18 +180,20 @@ fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
     let area = Rect::new(0, 0, chunks[0].width, 1);
     f.render_widget(border_tui.clone(), area);
     for y in 0..chunks[0].height{
-        let border = "[38;2;220;20;60m█";
+        let border = "[38;2;220;20;60m█"
+        .to_string()
+        .repeat(6 as usize);
         let b = border.into_text();
         let b2 = b.expect("can't parse border");
         let b3 = Paragraph::new(b2.clone());
         let m = y as u16;
-        let area = Rect::new(3, m, 1, 1);
+        let area = Rect::new(0, m, 6, 1);
         f.render_widget(b3.clone(), area);
     }
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    show_border(f, app);
+    // show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .margin(2)
@@ -203,7 +205,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         let large_sprite = pokemon_db_result[0].large.clone();
         let tui_sprite = large_sprite.into_text();
         let text_sprite = tui_sprite.expect("can't parse sprite");
-        let paragraph_sprite = Paragraph::new(text_sprite.clone()).alignment(Alignment::Center);
+        let paragraph_sprite = Paragraph::new(text_sprite.clone()).style(Style::default().fg(Color::Blue)).block(Block::default().borders(Borders::ALL));
+
         // f.render_widget(paragraph_sprite, chunks[0]);
         let width = chunks[0].width;
         let height = chunks[0].height;
