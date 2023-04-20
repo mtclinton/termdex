@@ -136,6 +136,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                     app.pokemon_search = p_input.to_string();
                     app.input.reset();
                 }
+                KeyCode::Char('q') => {
+                    disable_raw_mode()?;
+                    terminal.show_cursor()?;
+                    return Ok(());
+                }
                 _ => {
                     app.input.handle_event(&Event::Key(key));
                 }
