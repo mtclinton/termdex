@@ -171,16 +171,23 @@ fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
         .margin(2)
         .constraints([Constraint::Percentage(100)].as_ref())
         .split(f.size());
-    let border_string = "[38;2;220;20;60m█"
+    let large_border = "[38;2;220;20;60m█"
         .to_string()
         .repeat(chunks[0].width as usize);
-    let border_text = border_string.into_text();
+    let border_text = large_border.into_text();
     let border_enc = border_text.expect("can't parse border");
     let border_tui = Paragraph::new(border_enc.clone());
     let area = Rect::new(0, 0, chunks[0].width, 1);
     f.render_widget(border_tui.clone(), area);
-    let area = Rect::new(0,chunks[0].height, chunks[0].width, 1);
-    f.render_widget(border_tui.clone(), area);
+    for y in 0..chunks[0].height{
+        let border = "[38;2;220;20;60m█";
+        let b = border.into_text();
+        let b2 = b.expect("can't parse border");
+        let b3 = Paragraph::new(b2.clone());
+        let m = y as u16;
+        let area = Rect::new(3, m, 1, 1);
+        f.render_widget(b3.clone(), area);
+    }
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
