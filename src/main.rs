@@ -178,7 +178,9 @@ fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
     let border_enc = border_text.expect("can't parse border");
     let border_tui = Paragraph::new(border_enc.clone());
     let area = Rect::new(0, 0, chunks[0].width, 1);
-    f.render_widget(border_tui, area);
+    f.render_widget(border_tui.clone(), area);
+    let area = Rect::new(0,chunks[0].height, chunks[0].width, 1);
+    f.render_widget(border_tui.clone(), area);
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
