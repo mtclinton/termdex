@@ -35,10 +35,6 @@ use tui::{
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
-enum InputMode {
-    Normal,
-    Editing,
-}
 
 fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -66,8 +62,6 @@ fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
 struct App {
     /// Current value of the input box
     input: Input,
-    /// Current input mode
-    input_mode: InputMode,
     /// Current search value for pokemon
     pokemon_search: String,
 }
@@ -76,7 +70,6 @@ impl Default for App {
     fn default() -> App {
         App {
             input: Input::default(),
-            input_mode: InputMode::Normal,
             pokemon_search: "25".to_string(),
         }
     }
@@ -137,30 +130,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         terminal.draw(|f| ui(f, &mut app))?;
 
         if let Event::Key(key) = event::read()? {
-            match app.input_mode {
-                InputMode::Normal => match key.code {
-                    KeyCode::Char('e') => {
-                        app.input_mode = InputMode::Editing;
-                    }
-                    KeyCode::Char('q') => {
-                        return Ok(());
-                    }
-                    _ => {}
-                },
-                InputMode::Editing => match key.code {
-                    KeyCode::Enter => {
-                        let p_input = app.input.value();
-                        app.pokemon_search = p_input.to_string();
-                        app.input.reset();
-                    }
-                    KeyCode::Esc => {
-                        app.input_mode = InputMode::Normal;
-                    }
-                    _ => {
-                        app.input.handle_event(&Event::Key(key));
-                    }
-                },
+            match key.code {
+                KeyCode::Enter => {
+                    let p_input = app.input.value();
+                    app.pokemon_search = p_input.to_string();
+                    app.input.reset();
+                }
+                _ => {
+                    app.input.handle_event(&Event::Key(key));
+                }
             }
+            
         }
     }
 }
@@ -238,69 +218,20 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
         .split(chunks[1]);
 
-    let (msg, style) = match app.input_mode {
-        InputMode::Normal => (
-            vec![
-                Span::raw("Press "),
-                Span::styled(
-                    "q",
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to exit, "),
-                Span::styled(
-                    "e",
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to start editing."),
-            ],
-            Style::default().add_modifier(Modifier::RAPID_BLINK),
-        ),
-        InputMode::Editing => (
-            vec![
-                Span::raw("Press "),
-                Span::styled(
-                    "Esc",
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to stop editing, "),
-                Span::styled(
-                    "Enter",
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to record the message"),
-            ],
-            Style::default(),
-        ),
-    };
-    let mut text = Text::from(Spans::from(msg));
-    text.patch_style(style);
-    let help_message = Paragraph::new(text);
-    f.render_widget(help_message, chunks[0]);
-
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
 
     let scroll = app.input.visual_scroll(width as usize);
     let input = Paragraph::new(app.input.value())
-        .style(match app.input_mode {
-            InputMode::Normal => Style::default().fg(Color::Red),
-            InputMode::Editing => Style::default().fg(Color::Red),
-        })
+        .style(Style::default().fg(Color::Red))
         // .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title("Input"));
     f.render_widget(input, chunks[1]);
-    match app.input_mode {
-        InputMode::Normal =>
-            // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
-            {}
-
-        InputMode::Editing => {
-            // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-            f.set_cursor(
-                // Put cursor past the end of the input text
-                chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                // Move one line down, from the border to the input line
-                chunks[1].y + 1,
-            )
-        }
-    }
+    // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
+    f.set_cursor(
+        // Put cursor past the end of the input text
+        chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+        // Move one line down, from the border to the input line
+        chunks[1].y + 1,
+    );
+        
 }
