@@ -200,12 +200,12 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     let pokemon_db_result = show_pokemon(app.pokemon_search.clone()).expect("can't fetch pokmeon");
     if pokemon_db_result.len() > 0 {
+        let input = Paragraph::new("").style(Style::default().fg(Color::Red)).block(Block::default().borders(Borders::ALL));
+        f.render_widget(input, chunks[0]);
         let large_sprite = pokemon_db_result[0].large.clone();
         let tui_sprite = large_sprite.into_text();
         let text_sprite = tui_sprite.expect("can't parse sprite");
-        let paragraph_sprite = Paragraph::new(text_sprite.clone())
-            .style(Style::default().fg(Color::Blue))
-            .block(Block::default().borders(Borders::ALL));
+        let paragraph_sprite = Paragraph::new(text_sprite.clone());
 
         // f.render_widget(paragraph_sprite, chunks[0]);
         let width = chunks[0].width;
@@ -226,6 +226,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             sprite_height as u16,
         );
         f.render_widget(paragraph_sprite, area);
+
     } else {
         let paragraph_sprite = Paragraph::new("Pokemon not found.");
         f.render_widget(paragraph_sprite, chunks[0]);
@@ -284,7 +285,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             InputMode::Normal => Style::default().fg(Color::Red),
             InputMode::Editing => Style::default().fg(Color::Red),
         })
-        .scroll((0, scroll as u16))
+        // .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title("Input"));
     f.render_widget(input, chunks[1]);
     match app.input_mode {
