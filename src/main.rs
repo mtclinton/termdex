@@ -136,7 +136,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                     app.pokemon_search = p_input.to_string();
                     app.input.reset();
                 }
-                KeyCode::Char('q') => {
+                KeyCode::Ctrl('q') | KeyCode::Ctrl('c') => {
                     disable_raw_mode()?;
                     terminal.show_cursor()?;
                     return Ok(());
@@ -219,7 +219,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .margin(2)
         .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
         .split(chunks[1]);
 
@@ -229,14 +228,14 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let input = Paragraph::new(app.input.value())
         .style(Style::default().fg(Color::Red))
         // .scroll((0, scroll as u16))
-        .block(Block::default().borders(Borders::ALL).title("Input"));
-    f.render_widget(input, chunks[1]);
+        .block(Block::default().borders(Borders::ALL).title("Search Pokemon"));
+    f.render_widget(input, chunks[0]);
     // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
     f.set_cursor(
         // Put cursor past the end of the input text
-        chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+        chunks[0].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
         // Move one line down, from the border to the input line
-        chunks[1].y + 1,
+        chunks[0].y + 1,
     );
         
 }
