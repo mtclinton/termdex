@@ -262,9 +262,11 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         ),
     ];
     let mut text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text);
+    let input = Paragraph::new(text)
+        .style(Style::default().fg(Color::Red))
+        .block(Block::default().borders(Borders::ALL));
     f.render_widget(input, chunks[1]);
-        let h = vec![
+    let h = vec![
         Span::styled(
             "Height:",
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
@@ -277,7 +279,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         ),
     ];
     let mut text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text);
+    let input = Paragraph::new(text)
+        .style(Style::default().fg(Color::Red))
+        .block(Block::default().borders(Borders::ALL));
     f.render_widget(input, chunks[2]);
         let h = vec![
         Span::styled(
@@ -292,6 +296,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         ),
     ];
     let mut text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text);
+    let input = Paragraph::new(text)
+        .style(Style::default().fg(Color::Red))
+        .block(Block::default().borders(Borders::ALL));
     f.render_widget(input, chunks[3]);
 }
