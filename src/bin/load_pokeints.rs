@@ -3,11 +3,11 @@ use diesel::prelude::*;
 use serde::Deserialize;
 use std::env;
 use termdex::models::*;
-use termdex::schema::pokemon::dsl::pokemon;
-use termdex::schema::pokemon::pokemon_id;
 use termdex::schema::pokemon::base_experience;
-use termdex::schema::pokemon::weight;
+use termdex::schema::pokemon::dsl::pokemon;
 use termdex::schema::pokemon::height;
+use termdex::schema::pokemon::pokemon_id;
+use termdex::schema::pokemon::weight;
 
 #[derive(Deserialize)]
 pub struct PokemonAPIData {
@@ -16,7 +16,6 @@ pub struct PokemonAPIData {
     pub height: u64,
     pub weight: u64,
 }
-
 
 ///A Downloader to download web content
 pub struct Downloader {
