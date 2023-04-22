@@ -35,7 +35,6 @@ use tui::{
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
-
 fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
@@ -136,7 +135,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                     app.pokemon_search = p_input.to_string();
                     app.input.reset();
                 }
-                KeyCode::Esc=> {
+                KeyCode::Esc => {
                     disable_raw_mode()?;
                     terminal.show_cursor()?;
                     return Ok(());
@@ -145,7 +144,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                     app.input.handle_event(&Event::Key(key));
                 }
             }
-            
         }
     }
 }
@@ -185,7 +183,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     let pokemon_db_result = show_pokemon(app.pokemon_search.clone()).expect("can't fetch pokmeon");
     if pokemon_db_result.len() > 0 {
-        let input = Paragraph::new("").style(Style::default().fg(Color::Red)).block(Block::default().borders(Borders::ALL));
+        let input = Paragraph::new("")
+            .style(Style::default().fg(Color::Red))
+            .block(Block::default().borders(Borders::ALL));
         f.render_widget(input, chunks[0]);
         let large_sprite = pokemon_db_result[0].large.clone();
         let tui_sprite = large_sprite.into_text();
@@ -211,7 +211,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             sprite_height as u16,
         );
         f.render_widget(paragraph_sprite, area);
-
     } else {
         let paragraph_sprite = Paragraph::new("Pokemon not found.");
         f.render_widget(paragraph_sprite, chunks[0]);
@@ -228,7 +227,11 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let input = Paragraph::new(app.input.value())
         .style(Style::default().fg(Color::Red))
         // .scroll((0, scroll as u16))
-        .block(Block::default().borders(Borders::ALL).title("Search Pokemon"));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Search Pokemon"),
+        );
     f.render_widget(input, chunks[0]);
     // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
     f.set_cursor(
@@ -237,5 +240,4 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         // Move one line down, from the border to the input line
         chunks[0].y + 1,
     );
-        
 }

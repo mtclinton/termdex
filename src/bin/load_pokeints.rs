@@ -1,18 +1,9 @@
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::env;
-use std::fs;
-use std::io;
-extern crate termdex;
-use serde_json::Value;
 use termdex::models::*;
 use termdex::schema::pokemon::dsl::pokemon;
-use termdex::schema::pokemon::large;
-use termdex::schema::pokemon::pokemon_id;
-use termdex::schema::pokemon::small;
-
 
 #[derive(Deserialize)]
 pub struct PokemonAPIData {
@@ -94,8 +85,8 @@ impl Downloader {
         let req = self.client.get(url);
         match req.send() {
             Ok(mut response) => {
-                let pokemon: PokemonAPIData = response.json().unwrap();
-                Ok(pokemon)
+                let pokemon_resp: PokemonAPIData = response.json().unwrap();
+                Ok(pokemon_resp)
             }
 
             Err(e) => {
@@ -119,7 +110,6 @@ impl Downloader {
     }
 }
 
-
 fn main() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
@@ -141,6 +131,5 @@ fn main() {
                 println!("Couldn't download a page, {:?}", e);
             }
         }
-        println!("{}", p.name);
     }
 }
