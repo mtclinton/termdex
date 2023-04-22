@@ -246,7 +246,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                     Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
-                    format!("{}", pokemon_db_result[0].height.unwrap()),
+                    format!("{}", pokemon_db_result[0].height),
                     Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD),
                 ),
             ];

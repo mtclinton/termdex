@@ -64,9 +64,9 @@ impl Scraper {
             name: data.name,
             large: l_data,
             small: s_data,
-            base_experience: None,
-            height: None,
-            weight: None,
+            base_experience: data.base_experience as i32,
+            height: data.height as i32,
+            weight: data.weight as i32,
         };
         scraper.pokemon_data.lock().unwrap().push(new_pokemon);
     }
