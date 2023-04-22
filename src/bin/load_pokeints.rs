@@ -12,58 +12,11 @@ use termdex::schema::pokemon::height;
 #[derive(Deserialize)]
 pub struct PokemonAPIData {
     pub name: String,
-    pub types: Vec<PokeType>,
-    pub stats: Vec<Stat>,
-    pub abilities: Vec<PokeAbility>,
     pub base_experience: u64,
     pub height: u64,
-    pub moves: Vec<PokeMove>,
     pub weight: u64,
 }
 
-#[derive(Deserialize)]
-pub struct PokeAbility {
-    pub ability: PokeAbilityName,
-}
-
-#[derive(Deserialize)]
-pub struct PokeAbilityName {
-    pub name: String,
-}
-
-#[derive(Deserialize)]
-pub struct PokeMove {
-    pub r#move: PokeMoveDetails,
-}
-
-#[derive(Deserialize)]
-pub struct PokeMoveDetails {
-    pub name: String,
-    pub url: String,
-}
-
-#[derive(Deserialize)]
-pub struct PokeType {
-    #[serde(rename = "type")]
-    pub poketype: TypeName,
-}
-
-#[derive(Deserialize)]
-pub struct TypeName {
-    pub name: String,
-}
-
-#[derive(Deserialize)]
-pub struct Stat {
-    base_stat: u64,
-    effort: u64,
-    stat: StatName,
-}
-
-#[derive(Deserialize)]
-pub struct StatName {
-    name: String,
-}
 
 ///A Downloader to download web content
 pub struct Downloader {
