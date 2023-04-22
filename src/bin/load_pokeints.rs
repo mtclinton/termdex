@@ -4,6 +4,10 @@ use serde::Deserialize;
 use std::env;
 use termdex::models::*;
 use termdex::schema::pokemon::dsl::pokemon;
+use termdex::schema::pokemon::pokemon_id;
+use termdex::schema::pokemon::base_experience;
+use termdex::schema::pokemon::weight;
+use termdex::schema::pokemon::height;
 
 #[derive(Deserialize)]
 pub struct PokemonAPIData {
@@ -125,10 +129,17 @@ fn main() {
         let url = format!("https://pokeapi.co/api/v2/pokemon/{}", p.name);
         match downloader.get(&url) {
             Ok(response) => {
-                println!("{:#?}", response.name);
+                diesel::update(pokemon)
+                    .filter(pokemon_id.eq(p.pokemon_id))
+                    .set((
+                        base_experience.eq(response.base_experience as i32),
+                        height.eq(response.height as i32),
+                        weight.eq(response.weight as i32),
+                    ))
+                    .execute(&mut connection);
             }
             Err(e) => {
-                println!("Couldn't download a page, {:?}", e);
+                println!("Couldn't pokemon {}: {:?}", p.name, e);
             }
         }
     }
