@@ -7,8 +7,8 @@ diesel::table! {
         name -> Text,
         large -> Text,
         small -> Text,
-        base_experience -> Nullable<Int4>,
-        height -> Nullable<Int4>,
-        weight -> Nullable<Int4>,
+        base_experience -> Int4,
+        height -> Int4,
+        weight -> Int4,
     }
 }
