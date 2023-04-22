@@ -24,7 +24,7 @@ pub struct PokeAbilityName {
 
 #[derive(Deserialize)]
 pub struct PokeMove {
-    pub move: PokeMoveDetails,
+    pub r#move: PokeMoveDetails,
 }
 
 #[derive(Deserialize)]

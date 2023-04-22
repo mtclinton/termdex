@@ -9,6 +9,9 @@ pub struct NewPokemon {
     pub name: String,
     pub large: String,
     pub small: String,
+    pub base_experience: Option<i32>,
+    pub height: Option<i32>,
+    pub weight: Option<i32>,
 }
 
 #[derive(Debug, Queryable, Serialize)]
@@ -18,4 +21,7 @@ pub struct Pokemon {
     pub name: String,
     pub large: String,
     pub small: String,
+    pub base_experience: Option<i32>,
+    pub height: Option<i32>,
+    pub weight: Option<i32>,
 }
