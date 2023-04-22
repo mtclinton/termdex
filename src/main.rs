@@ -218,7 +218,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
+        .constraints([Constraint::Percentage(10),Constraint::Percentage(10), Constraint::Percentage(80)].as_ref())
         .split(chunks[1]);
 
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
@@ -240,4 +240,17 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         // Move one line down, from the border to the input line
         chunks[0].y + 1,
     );
+    let h = vec![
+                Span::styled(
+                    "Height:",
+                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!("{}", pokemon_db_result[0].height.unwrap()),
+                    Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD),
+                ),
+            ];
+    let mut text = Text::from(Spans::from(h));
+    let input = Paragraph::new(text);
+    f.render_widget(input, chunks[1]);
 }
