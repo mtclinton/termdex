@@ -22,8 +22,8 @@ use scraper::Scraper;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::env;
-use std::fs;
 use std::fmt;
+use std::fs;
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
@@ -140,56 +140,39 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn get_pokemon(app: &App) -> Pokemon {
-    match show_pokemon(app.pokemon_search.clone()){
-        Ok(p1) => {
-            match p1{
-                Some(pval) => {
-                    pval
-                }
-                None => {
-                    match show_pokemon("0".to_string()){
-                        Ok(notfound) => {
-                            match notfound{
-                                Some(notfound) => {
-                                    notfound
-                                }
-                                None => {
-                                    panic!("Something went wrong querying not found pokemon");
-                                }
-                            }
-                        }
-                        _ => {
-                            panic!("Something went wrong querying not found pokemon");
-                        }
+    match show_pokemon(app.pokemon_search.clone()) {
+        Ok(db_result) => match db_result {
+            Some(foundpokemon) => foundpokemon,
+            None => match show_pokemon("0".to_string()) {
+                Ok(notfound) => match notfound {
+                    Some(notfound) => notfound,
+                    None => {
+                        panic!("Something went wrong querying not found pokemon");
                     }
-                }
-            }
-        }
-        Err(e) => {
-            match show_pokemon("0".to_string()){
-                Ok(notfound) => {
-                    match notfound{
-                        Some(notfound) => {
-                            notfound
-                        }
-                        None => {
-                            panic!("Something went wrong querying not found pokemon");
-                        }
-                    }
-                }
+                },
                 _ => {
                     panic!("Something went wrong querying not found pokemon");
                 }
+            },
+        },
+        Err(e) => match show_pokemon("0".to_string()) {
+            Ok(notfound) => match notfound {
+                Some(notfound) => notfound,
+                None => {
+                    panic!("Something went wrong querying not found pokemon");
+                }
+            },
+            _ => {
+                panic!("Something went wrong querying not found pokemon");
             }
-        }
+        },
     }
-
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
-        let p9 = get_pokemon(&mut app);
-        terminal.draw(|f| ui(f, &mut app, p9))?;
+        let current_pokemon = get_pokemon(&mut app);
+        terminal.draw(|f| ui(f, &mut app, current_pokemon))?;
 
         if let Event::Key(key) = event::read()? {
             match key.code {
