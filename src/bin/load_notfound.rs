@@ -20,8 +20,10 @@ fn main() {
 
     let notfound_large = format!("sprites/notfound_large");
     let notfound_small = format!("sprites/notfound_small");
-    let notfound_large_data = fs::read_to_string(notfound_large).expect("Unable to read large sprite");
-    let notfound_small_data = fs::read_to_string(notfound_small).expect("Unable to read small sprite");
+    let notfound_large_data =
+        fs::read_to_string(notfound_large).expect("Unable to read large sprite");
+    let notfound_small_data =
+        fs::read_to_string(notfound_small).expect("Unable to read small sprite");
 
     let notfound = NewPokemon {
         pokemon_id: 0,

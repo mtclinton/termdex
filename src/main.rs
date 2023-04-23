@@ -238,7 +238,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
 
     // add color to not found sprite
     let sprite = paragraph_sprite.style(Style::default().fg(Color::Blue));
-    
 
     // f.render_widget(paragraph_sprite, chunks[0]);
     let width = chunks[0].width;
