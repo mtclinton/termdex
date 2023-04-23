@@ -47,27 +47,27 @@ impl fmt::Display for PokeError {
 
 impl Error for PokeError {}
 
-fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
+fn show_pokemon(pokemon_term: String) -> Result<Option<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
     if pokemon_term.chars().all(char::is_numeric) {
         let pid = pokemon_term.parse::<i32>().unwrap();
-        if pid > 151 || pid < 1 {
-            return Err(Box::new(PokeError("Invalid id".into())));
-        }
+        // if pid > 151 || pid < 0 {
+        //     return Err(Box::new(PokeError("Invalid id".into())));
+        // }
         let pokemon_result = pokemon
             .filter(pokemon_id.eq(pid))
-            .limit(1)
-            .load::<Pokemon>(&mut connection)
-            .expect("Error loading posts");
+            .first(&mut connection)
+            .optional()
+            .expect("Error loading pokemon");
         Ok(pokemon_result)
     } else {
         let pokemon_result = pokemon
             .filter(name.eq(pokemon_term))
-            .limit(1)
-            .load::<Pokemon>(&mut connection)
-            .expect("Error loading posts");
+            .first(&mut connection)
+            .optional()
+            .expect("Error loading pokemon");
         Ok(pokemon_result)
     }
 }
@@ -139,9 +139,57 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn get_pokemon(app: &App) -> Pokemon {
+    match show_pokemon(app.pokemon_search.clone()){
+        Ok(p1) => {
+            match p1{
+                Some(pval) => {
+                    pval
+                }
+                None => {
+                    match show_pokemon("0".to_string()){
+                        Ok(notfound) => {
+                            match notfound{
+                                Some(notfound) => {
+                                    notfound
+                                }
+                                None => {
+                                    panic!("Something went wrong querying not found pokemon");
+                                }
+                            }
+                        }
+                        _ => {
+                            panic!("Something went wrong querying not found pokemon");
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            match show_pokemon("0".to_string()){
+                Ok(notfound) => {
+                    match notfound{
+                        Some(notfound) => {
+                            notfound
+                        }
+                        None => {
+                            panic!("Something went wrong querying not found pokemon");
+                        }
+                    }
+                }
+                _ => {
+                    panic!("Something went wrong querying not found pokemon");
+                }
+            }
+        }
+    }
+
+}
+
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
-        terminal.draw(|f| ui(f, &mut app))?;
+        let p9 = get_pokemon(&mut app);
+        terminal.draw(|f| ui(f, &mut app, p9))?;
 
         if let Event::Key(key) = event::read()? {
             match key.code {
@@ -188,7 +236,7 @@ fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
     // show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -196,48 +244,34 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
         .split(f.size());
 
-    match show_pokemon(app.pokemon_search.clone()){
-            Ok(pokemon_db_result) => {
-                if pokemon_db_result.len() > 0 {
-                    let input = Paragraph::new("")
-                        .style(Style::default().fg(Color::Red))
-                        .block(Block::default().borders(Borders::ALL));
-                    f.render_widget(input, chunks[0]);
-                    let large_sprite = pokemon_db_result[0].large.clone();
-                    let tui_sprite = large_sprite.into_text();
-                    let text_sprite = tui_sprite.expect("can't parse sprite");
-                    let paragraph_sprite = Paragraph::new(text_sprite.clone());
+    let input = Paragraph::new("")
+        .style(Style::default().fg(Color::Red))
+        .block(Block::default().borders(Borders::ALL));
+    f.render_widget(input, chunks[0]);
+    let large_sprite = pokemon_db_result.large.clone();
+    let tui_sprite = large_sprite.into_text();
+    let text_sprite = tui_sprite.expect("can't parse sprite");
+    let paragraph_sprite = Paragraph::new(text_sprite.clone());
 
-                    // f.render_widget(paragraph_sprite, chunks[0]);
-                    let width = chunks[0].width;
-                    let height = chunks[0].height;
-                    let sprite_height = text_sprite.clone().lines.len();
-                    let mut sprite_width = 0;
-                    for line in text_sprite.clone().lines {
-                        if line.width() > sprite_width {
-                            sprite_width = line.width();
-                        }
-                    }
-                    let sprite_x = (width as u16 - sprite_width as u16) / 2;
-                    let sprite_y = (height as u16 - sprite_height as u16) / 2;
-                    let area = Rect::new(
-                        sprite_x,
-                        sprite_y,
-                        sprite_width as u16,
-                        sprite_height as u16,
-                    );
-                    f.render_widget(paragraph_sprite, area);
-                } else {
-                    let paragraph_sprite = Paragraph::new("Pokemon not found.");
-                    f.render_widget(paragraph_sprite, chunks[0]);
-                }
-            }
-            Err(e) => {
-                let paragraph_sprite = Paragraph::new("Pokemon not found.");
-                f.render_widget(paragraph_sprite, chunks[0]);
-            }
+    // f.render_widget(paragraph_sprite, chunks[0]);
+    let width = chunks[0].width;
+    let height = chunks[0].height;
+    let sprite_height = text_sprite.clone().lines.len();
+    let mut sprite_width = 0;
+    for line in text_sprite.clone().lines {
+        if line.width() > sprite_width {
+            sprite_width = line.width();
+        }
     }
-    
+    let sprite_x = (width as u16 - sprite_width as u16) / 2;
+    let sprite_y = (height as u16 - sprite_height as u16) / 2;
+    let area = Rect::new(
+        sprite_x,
+        sprite_y,
+        sprite_width as u16,
+        sprite_height as u16,
+    );
+    f.render_widget(paragraph_sprite, area);
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)

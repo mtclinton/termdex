@@ -14,7 +14,7 @@ pub struct NewPokemon {
     pub weight: i32,
 }
 
-#[derive(Debug, Queryable, Serialize)]
+#[derive(Debug, Queryable, Serialize, Clone)]
 pub struct Pokemon {
     pub id: i32,
     pub pokemon_id: i32,
