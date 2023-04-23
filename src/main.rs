@@ -323,7 +323,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(input, chunks[2]);
-        let h = vec![
+    let h = vec![
         Span::styled(
             "Weight:",
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
