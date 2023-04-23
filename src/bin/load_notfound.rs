@@ -24,7 +24,6 @@ fn main() {
     let notfound_small_data = fs::read_to_string(notfound_small).expect("Unable to read small sprite");
 
     let notfound = NewPokemon {
-        id: 0, 
         pokemon_id: 0,
         name: "Not Found".to_string(),
         large: notfound_large_data,
@@ -36,6 +35,5 @@ fn main() {
 
     diesel::insert_into(pokemon)
         .values(&notfound)
-        .execute(&mut connection)
-        .expect("Error saving notfound");
+        .execute(&mut connection);
 }
