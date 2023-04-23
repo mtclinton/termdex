@@ -236,6 +236,10 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
     let text_sprite = tui_sprite.expect("can't parse sprite");
     let paragraph_sprite = Paragraph::new(text_sprite.clone());
 
+    // add color to not found sprite
+    let sprite = paragraph_sprite.style(Style::default().fg(Color::Blue));
+    
+
     // f.render_widget(paragraph_sprite, chunks[0]);
     let width = chunks[0].width;
     let height = chunks[0].height;
@@ -254,7 +258,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
         sprite_width as u16,
         sprite_height as u16,
     );
-    f.render_widget(paragraph_sprite, area);
+    f.render_widget(sprite, area);
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
