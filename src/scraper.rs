@@ -137,6 +137,26 @@ impl Scraper {
         diesel::insert_into(pokemon::table)
             .values(&*pokemon)
             .execute(&mut conn);
+        let notfound_large = format!("sprites/notfound_large");
+        let notfound_small = format!("sprites/notfound_small");
+        let notfound_large_data =
+            fs::read_to_string(notfound_large).expect("Unable to read large sprite");
+        let notfound_small_data =
+            fs::read_to_string(notfound_small).expect("Unable to read small sprite");
+
+        let notfound = NewPokemon {
+            pokemon_id: 0,
+            name: "Not Found".to_string(),
+            large: notfound_large_data,
+            small: notfound_small_data,
+            base_experience: -1,
+            height: -1,
+            weight: -1,
+        };
+
+        diesel::insert_into(pokemon::table)
+            .values(&notfound)
+            .execute(&mut conn);
     }
 
     /// Sleep the thread for a variable amount of seconds to avoid getting banned
