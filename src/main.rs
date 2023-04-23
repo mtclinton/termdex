@@ -23,6 +23,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
+use std::fmt;
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
@@ -35,12 +36,26 @@ use tui::{
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
+#[derive(Debug)]
+struct PokeError(String);
+
+impl fmt::Display for PokeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "There is an error: {}", self.0)
+    }
+}
+
+impl Error for PokeError {}
+
 fn show_pokemon(pokemon_term: String) -> Result<Vec<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
     if pokemon_term.chars().all(char::is_numeric) {
         let pid = pokemon_term.parse::<i32>().unwrap();
+        if pid > 151 || pid < 1 {
+            return Err(Box::new(PokeError("Invalid id".into())));
+        }
         let pokemon_result = pokemon
             .filter(pokemon_id.eq(pid))
             .limit(1)
@@ -181,40 +196,48 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
         .split(f.size());
 
-    let pokemon_db_result = show_pokemon(app.pokemon_search.clone()).expect("can't fetch pokmeon");
-    if pokemon_db_result.len() > 0 {
-        let input = Paragraph::new("")
-            .style(Style::default().fg(Color::Red))
-            .block(Block::default().borders(Borders::ALL));
-        f.render_widget(input, chunks[0]);
-        let large_sprite = pokemon_db_result[0].large.clone();
-        let tui_sprite = large_sprite.into_text();
-        let text_sprite = tui_sprite.expect("can't parse sprite");
-        let paragraph_sprite = Paragraph::new(text_sprite.clone());
+    match show_pokemon(app.pokemon_search.clone()){
+            Ok(pokemon_db_result) => {
+                if pokemon_db_result.len() > 0 {
+                    let input = Paragraph::new("")
+                        .style(Style::default().fg(Color::Red))
+                        .block(Block::default().borders(Borders::ALL));
+                    f.render_widget(input, chunks[0]);
+                    let large_sprite = pokemon_db_result[0].large.clone();
+                    let tui_sprite = large_sprite.into_text();
+                    let text_sprite = tui_sprite.expect("can't parse sprite");
+                    let paragraph_sprite = Paragraph::new(text_sprite.clone());
 
-        // f.render_widget(paragraph_sprite, chunks[0]);
-        let width = chunks[0].width;
-        let height = chunks[0].height;
-        let sprite_height = text_sprite.clone().lines.len();
-        let mut sprite_width = 0;
-        for line in text_sprite.clone().lines {
-            if line.width() > sprite_width {
-                sprite_width = line.width();
+                    // f.render_widget(paragraph_sprite, chunks[0]);
+                    let width = chunks[0].width;
+                    let height = chunks[0].height;
+                    let sprite_height = text_sprite.clone().lines.len();
+                    let mut sprite_width = 0;
+                    for line in text_sprite.clone().lines {
+                        if line.width() > sprite_width {
+                            sprite_width = line.width();
+                        }
+                    }
+                    let sprite_x = (width as u16 - sprite_width as u16) / 2;
+                    let sprite_y = (height as u16 - sprite_height as u16) / 2;
+                    let area = Rect::new(
+                        sprite_x,
+                        sprite_y,
+                        sprite_width as u16,
+                        sprite_height as u16,
+                    );
+                    f.render_widget(paragraph_sprite, area);
+                } else {
+                    let paragraph_sprite = Paragraph::new("Pokemon not found.");
+                    f.render_widget(paragraph_sprite, chunks[0]);
+                }
             }
-        }
-        let sprite_x = (width as u16 - sprite_width as u16) / 2;
-        let sprite_y = (height as u16 - sprite_height as u16) / 2;
-        let area = Rect::new(
-            sprite_x,
-            sprite_y,
-            sprite_width as u16,
-            sprite_height as u16,
-        );
-        f.render_widget(paragraph_sprite, area);
-    } else {
-        let paragraph_sprite = Paragraph::new("Pokemon not found.");
-        f.render_widget(paragraph_sprite, chunks[0]);
+            Err(e) => {
+                let paragraph_sprite = Paragraph::new("Pokemon not found.");
+                f.render_widget(paragraph_sprite, chunks[0]);
+            }
     }
+    
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -249,55 +272,55 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         // Move one line down, from the border to the input line
         chunks[0].y + 1,
     );
-    let h = vec![
-        Span::styled(
-            "Experience:",
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(
-            format!("{}", pokemon_db_result[0].base_experience),
-            Style::default()
-                .fg(Color::Blue)
-                .add_modifier(Modifier::BOLD),
-        ),
-    ];
-    let mut text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text)
-        .style(Style::default().fg(Color::Red))
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, chunks[1]);
-    let h = vec![
-        Span::styled(
-            "Height:",
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(
-            format!("{}", pokemon_db_result[0].height),
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        ),
-    ];
-    let mut text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text)
-        .style(Style::default().fg(Color::Red))
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, chunks[2]);
-        let h = vec![
-        Span::styled(
-            "Weight:",
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(
-            format!("{}", pokemon_db_result[0].weight),
-            Style::default()
-                .fg(Color::Green)
-                .add_modifier(Modifier::BOLD),
-        ),
-    ];
-    let mut text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text)
-        .style(Style::default().fg(Color::Red))
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, chunks[3]);
+    // let h = vec![
+    //     Span::styled(
+    //         "Experience:",
+    //         Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+    //     ),
+    //     Span::styled(
+    //         format!("{}", pokemon_db_result[0].base_experience),
+    //         Style::default()
+    //             .fg(Color::Blue)
+    //             .add_modifier(Modifier::BOLD),
+    //     ),
+    // ];
+    // let mut text = Text::from(Spans::from(h));
+    // let input = Paragraph::new(text)
+    //     .style(Style::default().fg(Color::Red))
+    //     .block(Block::default().borders(Borders::ALL));
+    // f.render_widget(input, chunks[1]);
+    // let h = vec![
+    //     Span::styled(
+    //         "Height:",
+    //         Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+    //     ),
+    //     Span::styled(
+    //         format!("{}", pokemon_db_result[0].height),
+    //         Style::default()
+    //             .fg(Color::Yellow)
+    //             .add_modifier(Modifier::BOLD),
+    //     ),
+    // ];
+    // let mut text = Text::from(Spans::from(h));
+    // let input = Paragraph::new(text)
+    //     .style(Style::default().fg(Color::Red))
+    //     .block(Block::default().borders(Borders::ALL));
+    // f.render_widget(input, chunks[2]);
+    //     let h = vec![
+    //     Span::styled(
+    //         "Weight:",
+    //         Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+    //     ),
+    //     Span::styled(
+    //         format!("{}", pokemon_db_result[0].weight),
+    //         Style::default()
+    //             .fg(Color::Green)
+    //             .add_modifier(Modifier::BOLD),
+    //     ),
+    // ];
+    // let mut text = Text::from(Spans::from(h));
+    // let input = Paragraph::new(text)
+    //     .style(Style::default().fg(Color::Red))
+    //     .block(Block::default().borders(Borders::ALL));
+    // f.render_widget(input, chunks[3]);
 }
