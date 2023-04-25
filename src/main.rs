@@ -53,9 +53,6 @@ fn show_pokemon(pokemon_term: String) -> Result<Option<Pokemon>, Box<dyn Error>>
         .expect(&format!("Error connecting to {}", database_url));
     if pokemon_term.chars().all(char::is_numeric) {
         let pid = pokemon_term.parse::<i32>().unwrap();
-        // if pid > 151 || pid < 0 {
-        //     return Err(Box::new(PokeError("Invalid id".into())));
-        // }
         let pokemon_result = pokemon
             .filter(pokemon_id.eq(pid))
             .first(&mut connection)
@@ -194,30 +191,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
-fn show_border<B: Backend>(f: &mut Frame<B>, app: &App) {
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .margin(1)
-        .constraints([Constraint::Percentage(100)].as_ref())
-        .split(f.size());
-    let large_border = "[38;2;220;20;60m█"
-        .to_string()
-        .repeat(chunks[0].width as usize);
-    let border_text = large_border.into_text();
-    let border_enc = border_text.expect("can't parse border");
-    let border_tui = Paragraph::new(border_enc.clone());
-    let area = Rect::new(0, 0, chunks[0].width, 1);
-    f.render_widget(border_tui.clone(), area);
-    for y in 0..chunks[0].height {
-        let border = "[38;2;220;20;60m█".to_string().repeat(6 as usize);
-        let b = border.into_text();
-        let b2 = b.expect("can't parse border");
-        let b3 = Paragraph::new(b2.clone());
-        let m = y as u16;
-        let area = Rect::new(0, m, 6, 1);
-        f.render_widget(b3.clone(), area);
-    }
-}
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
     // show_border(f, app);
