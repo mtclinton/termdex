@@ -6,8 +6,6 @@ use crate::pokemon::dsl::pokemon;
 use crate::schema::pokemon::name;
 use crate::schema::pokemon::pokemon_id;
 use ansi_to_tui::IntoText;
-use chrono::prelude::*;
-use colored::Colorize;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -16,21 +14,17 @@ use crossterm::{
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use models::*;
-use rand::seq::SliceRandom;
 use schema::*;
 use scraper::Scraper;
-use serde::Deserialize;
-use std::collections::HashMap;
 use std::env;
 use std::fmt;
-use std::fs;
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
 use tui_input::backend::crossterm::EventHandler;

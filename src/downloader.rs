@@ -79,7 +79,7 @@ impl Downloader {
     fn make_request(&self, url: &str) -> Result<PokemonAPIData, reqwest::Error> {
         let req = self.client.get(url);
         match req.send() {
-            Ok(mut response) => {
+            Ok(response) => {
                 let pokemon: PokemonAPIData = response.json().unwrap();
                 Ok(pokemon)
             }
