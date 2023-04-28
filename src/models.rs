@@ -25,3 +25,18 @@ pub struct Pokemon {
     pub height: i32,
     pub weight: i32,
 }
+
+#[derive(Debug, Insertable)]
+#[table_name = "pokemon_type"]
+pub struct NewPokemonType {
+    pub pokemon_id: i32,
+    pub type_id: i32,
+}
+
+
+#[derive(Debug, Queryable, Serialize, Clone)]
+pub struct PokemonType {
+    pub id: i32,
+    pub pokemon_id: i32,
+    pub type_id: i32,
+}
