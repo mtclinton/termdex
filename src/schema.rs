@@ -12,3 +12,16 @@ diesel::table! {
         weight -> Int4,
     }
 }
+
+diesel::table! {
+    pokemon_type (id) {
+        id -> Int4,
+        pokemon_id -> Int4,
+        type_id -> Int4,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(
+    pokemon,
+    pokemon_type,
+);

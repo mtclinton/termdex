@@ -20,6 +20,7 @@ pub struct PokeAbility {
 #[derive(Deserialize)]
 pub struct PokeAbilityName {
     pub name: String,
+    pub url: String,
 }
 
 #[derive(Deserialize)]
