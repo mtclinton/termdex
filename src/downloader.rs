@@ -43,6 +43,7 @@ pub struct PokeType {
 #[derive(Deserialize)]
 pub struct TypeName {
     pub name: String,
+    pub url: String,
 }
 
 #[derive(Deserialize)]

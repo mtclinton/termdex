@@ -18,6 +18,13 @@ static MAX_EMPTY_RECEIVES: usize = 10;
 static SLEEP_MILLIS: u64 = 100;
 static SLEEP_DURATION: Duration = Duration::from_millis(SLEEP_MILLIS);
 
+// Track pokemon type when recieving and before inserting to db
+pub struc PokeTypeTracker {
+    pokemon_id: i32,
+    name: String,
+    url: String,
+}
+
 /// Producer and Consumer data structure. Handles the incoming requests and
 /// adds more as new URLs are found
 pub struct Scraper {
@@ -26,6 +33,8 @@ pub struct Scraper {
     downloader: downloader::Downloader,
     visited_urls: Mutex<HashSet<String>>,
     pokemon_data: Mutex<Vec<NewPokemon>>,
+    pokemon_types: Mutex<HashSet<String>>,
+    poke_type_tracker: Mutex<Vec<PokeTypeTracker>>,
 }
 
 impl Scraper {
@@ -39,6 +48,8 @@ impl Scraper {
             receiver: rx,
             visited_urls: Mutex::new(HashSet::new()),
             pokemon_data: Mutex::new(Vec::<NewPokemon>::new()),
+            pokemon_types: Mutex::new(HashSet::new()),
+            poke_type_tracker: Mutex::new(Vec::<PokeTypeTracker>::new()),
         }
     }
 
@@ -63,6 +74,16 @@ impl Scraper {
             height: data.height as i32,
             weight: data.weight as i32,
         };
+        for found_type in data.types {
+            scraper.pokemon_types.lock().unwrap().insert(found_type.poketype.name);
+            let new_poke_type = PokeTypeTracker {
+                pokemon_id: id as i32,
+                name: found_type.poketype.name,
+                url: found_type.poketype.url,
+            }
+            scraper.poke_type_tracker.lock().unwrap().push(new_poke_type);
+        }
+
         scraper.pokemon_data.lock().unwrap().push(new_pokemon);
     }
 
