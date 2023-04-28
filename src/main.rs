@@ -185,7 +185,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
-
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
     // show_border(f, app);
     let chunks = Layout::default()

@@ -33,10 +33,23 @@ pub struct NewPokemonType {
     pub type_id: i32,
 }
 
-
 #[derive(Debug, Queryable, Serialize, Clone)]
 pub struct PokemonType {
     pub id: i32,
     pub pokemon_id: i32,
     pub type_id: i32,
+}
+
+#[derive(Debug, Insertable, Eq, Hash, PartialEq)]
+#[table_name = "ptype"]
+pub struct NewPType {
+    pub name: String,
+    pub url: String,
+}
+
+#[derive(Debug, Queryable, Serialize, Clone)]
+pub struct PType {
+    pub id: i32,
+    pub name: String,
+    pub url: String,
 }

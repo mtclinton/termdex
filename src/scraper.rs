@@ -1,16 +1,17 @@
+use super::downloader;
+use super::models::*;
+use super::schema::*;
 use crossbeam::channel::{Receiver, Sender, TryRecvError};
 use crossbeam::thread;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use rand::Rng;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::sync::Mutex;
 use std::time::Duration;
-use super::downloader;
-use super::models::*;
-use super::schema::*;
-use rand::Rng;
 
 /// Maximum number of empty recv() from the channel
 static MAX_EMPTY_RECEIVES: usize = 10;
@@ -19,7 +20,7 @@ static SLEEP_MILLIS: u64 = 100;
 static SLEEP_DURATION: Duration = Duration::from_millis(SLEEP_MILLIS);
 
 // Track pokemon type when recieving and before inserting to db
-pub struc PokeTypeTracker {
+pub struct PokeTypeTracker {
     pokemon_id: i32,
     name: String,
     url: String,
@@ -75,16 +76,21 @@ impl Scraper {
             weight: data.weight as i32,
         };
         for found_type in data.types {
-            scraper.pokemon_types.lock().unwrap().insert(NewPType {
+            let npt = NewPType {
                 name: found_type.poketype.name,
-                url: found_type.poketype.url
-            });
+                url: found_type.poketype.url,
+            };
+            scraper.pokemon_types.lock().unwrap().insert(npt);
             let new_poke_type = PokeTypeTracker {
                 pokemon_id: id as i32,
                 name: found_type.poketype.name,
                 url: found_type.poketype.url,
-            }
-            scraper.poke_type_tracker.lock().unwrap().push(new_poke_type);
+            };
+            scraper
+                .poke_type_tracker
+                .lock()
+                .unwrap()
+                .push(new_poke_type);
         }
 
         scraper.pokemon_data.lock().unwrap().push(new_pokemon);
@@ -177,10 +183,10 @@ impl Scraper {
             .values(&notfound)
             .execute(&mut conn);
 
-        let ptypes = self.pokemon_types.lock().unwrap();
+        let ptypes: Vec<NewPType> = self.pokemon_types.lock().unwrap().into_iter().collect();
         let db_types = diesel::insert_into(ptype::table)
             .values(&*ptypes)
-            .get_results(&mut conn)?;
+            .get_results(&mut conn);
         let mut insertable_poke_types: Vec<NewPokemonType> = Vec::new();
         let mut type_hashmap = HashMap::new();
         for db_type in db_types.iter() {
@@ -188,9 +194,9 @@ impl Scraper {
         }
         let ptts = self.poke_type_tracker.lock().unwrap();
         for ptt in ptts.iter() {
-            insertable_poke_types.push(NewPokemonType{
+            insertable_poke_types.push(NewPokemonType {
                 pokemon_id: ptt.pokemon_id,
-                type_id: type_hashmap.get(ptt.name)
+                type_id: type_hashmap.get(&ptt.name),
             });
         }
         diesel::insert_into(pokemon_type::table)
