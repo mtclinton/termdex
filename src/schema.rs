@@ -21,7 +21,16 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    ptype (id) {
+        id -> Int4,
+        name -> Text,
+        url -> Text,
+    }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(
     pokemon,
     pokemon_type,
+    ptype,
 );
