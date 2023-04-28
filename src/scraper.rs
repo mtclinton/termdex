@@ -33,7 +33,7 @@ pub struct Scraper {
     downloader: downloader::Downloader,
     visited_urls: Mutex<HashSet<String>>,
     pokemon_data: Mutex<Vec<NewPokemon>>,
-    pokemon_types: Mutex<HashSet<String>>,
+    pokemon_types: Mutex<HashSet<NewPType>>,
     poke_type_tracker: Mutex<Vec<PokeTypeTracker>>,
 }
 
@@ -75,7 +75,10 @@ impl Scraper {
             weight: data.weight as i32,
         };
         for found_type in data.types {
-            scraper.pokemon_types.lock().unwrap().insert(found_type.poketype.name);
+            scraper.pokemon_types.lock().unwrap().insert(NewPType {
+                name: found_type.poketype.name,
+                url: found_type.poketype.url
+            });
             let new_poke_type = PokeTypeTracker {
                 pokemon_id: id as i32,
                 name: found_type.poketype.name,
@@ -172,6 +175,26 @@ impl Scraper {
 
         diesel::insert_into(pokemon::table)
             .values(&notfound)
+            .execute(&mut conn);
+
+        let ptypes = self.pokemon_types.lock().unwrap();
+        let db_types = diesel::insert_into(ptype::table)
+            .values(&*ptypes)
+            .get_results(&mut conn)?;
+        let mut insertable_poke_types: Vec<NewPokemonType> = Vec::new();
+        let mut type_hashmap = HashMap::new();
+        for db_type in db_types.iter() {
+            type_hashmap.insert(db_type.name, db_types.id);
+        }
+        let ptts = self.poke_type_tracker.lock().unwrap();
+        for ptt in ptts.iter() {
+            insertable_poke_types.push(NewPokemonType{
+                pokemon_id: ptt.pokemon_id,
+                type_id: type_hashmap.get(ptt.name)
+            });
+        }
+        diesel::insert_into(pokemon_type::table)
+            .values(&insertable_poke_types)
             .execute(&mut conn);
     }
 
