@@ -184,14 +184,16 @@ impl Scraper {
             .execute(&mut conn);
 
         let ptypes: Vec<NewPType> = self.pokemon_types.lock().unwrap().into_iter().collect();
-        let db_types = diesel::insert_into(ptype::table)
+        let db_types: QueryResult<Vec<PType>> = diesel::insert_into(ptype::table)
             .values(&*ptypes)
-            .get_results(&mut conn);
+            .get_results::<PType>(&mut conn);
         let mut insertable_poke_types: Vec<NewPokemonType> = Vec::new();
         let mut type_hashmap = HashMap::new();
         for db_type in db_types.iter() {
-            type_hashmap.insert(db_type.name, db_types.id);
-        }
+                    let n = db_type.name;
+                    let i = db_types.id;
+                    type_hashmap.insert(n, i);
+                }
         let ptts = self.poke_type_tracker.lock().unwrap();
         for ptt in ptts.iter() {
             insertable_poke_types.push(NewPokemonType {
