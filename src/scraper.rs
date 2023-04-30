@@ -189,9 +189,9 @@ impl Scraper {
             .get_results::<PType>(&mut conn);
         let mut insertable_poke_types: Vec<NewPokemonType> = Vec::new();
         let mut type_hashmap = HashMap::new();
-        for db_type in db_types.iter() {
+        for db_type in db_types.unwrap().iter() {
                     let n = db_type.name;
-                    let i = db_types.id;
+                    let i = db_type.id;
                     type_hashmap.insert(n, i);
                 }
         let ptts = self.poke_type_tracker.lock().unwrap();
