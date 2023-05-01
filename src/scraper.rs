@@ -77,8 +77,8 @@ impl Scraper {
         };
         for found_type in data.types {
             let npt = NewPType {
-                name: found_type.poketype.name,
-                url: found_type.poketype.url,
+                name: found_type.poketype.name.clone(),
+                url: found_type.poketype.url.clone(),
             };
             scraper.pokemon_types.lock().unwrap().insert(npt);
             let new_poke_type = PokeTypeTracker {
@@ -183,22 +183,24 @@ impl Scraper {
             .values(&notfound)
             .execute(&mut conn);
 
-        let ptypes: Vec<NewPType> = self.pokemon_types.lock().unwrap().into_iter().collect();
+        let p = self.pokemon_types.lock().unwrap();
+        let ptypes: Vec<NewPType> = p.clone().into_iter().collect();
         let db_types: QueryResult<Vec<PType>> = diesel::insert_into(ptype::table)
             .values(&*ptypes)
             .get_results::<PType>(&mut conn);
         let mut insertable_poke_types: Vec<NewPokemonType> = Vec::new();
         let mut type_hashmap = HashMap::new();
         for db_type in db_types.unwrap().iter() {
-                    let n = db_type.name;
+                    let n = db_type.name.clone();
                     let i = db_type.id;
                     type_hashmap.insert(n, i);
                 }
         let ptts = self.poke_type_tracker.lock().unwrap();
         for ptt in ptts.iter() {
+            let name = &ptt.name;
             insertable_poke_types.push(NewPokemonType {
                 pokemon_id: ptt.pokemon_id,
-                type_id: type_hashmap.get(&ptt.name),
+                type_id: *type_hashmap.get(name).unwrap(),
             });
         }
         diesel::insert_into(pokemon_type::table)
