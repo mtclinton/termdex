@@ -146,7 +146,7 @@ fn get_pokemon(app: &App) -> Pokemon {
                 }
             },
         },
-        Err(e) => match show_pokemon("0".to_string()) {
+        Err(_e) => match show_pokemon("0".to_string()) {
             Ok(notfound) => match notfound {
                 Some(notfound) => notfound,
                 None => {
@@ -270,7 +270,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
                 .add_modifier(Modifier::BOLD),
         ),
     ];
-    let mut text = Text::from(Spans::from(h));
+    let text = Text::from(Spans::from(h));
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
@@ -287,7 +287,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
                 .add_modifier(Modifier::BOLD),
         ),
     ];
-    let mut text = Text::from(Spans::from(h));
+    let text = Text::from(Spans::from(h));
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
@@ -304,7 +304,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
                 .add_modifier(Modifier::BOLD),
         ),
     ];
-    let mut text = Text::from(Spans::from(h));
+    let text = Text::from(Spans::from(h));
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));

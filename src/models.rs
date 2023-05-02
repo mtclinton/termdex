@@ -40,7 +40,7 @@ pub struct PokemonType {
     pub type_id: i32,
 }
 
-#[derive(Debug, Insertable, Eq, Hash, PartialEq,Clone)]
+#[derive(Debug, Insertable, Eq, Hash, PartialEq, Clone)]
 #[table_name = "ptype"]
 pub struct NewPType {
     pub name: String,

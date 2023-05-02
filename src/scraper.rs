@@ -23,7 +23,6 @@ static SLEEP_DURATION: Duration = Duration::from_millis(SLEEP_MILLIS);
 pub struct PokeTypeTracker {
     pokemon_id: i32,
     name: String,
-    url: String,
 }
 
 /// Producer and Consumer data structure. Handles the incoming requests and
@@ -84,7 +83,6 @@ impl Scraper {
             let new_poke_type = PokeTypeTracker {
                 pokemon_id: id as i32,
                 name: found_type.poketype.name,
-                url: found_type.poketype.url,
             };
             scraper
                 .poke_type_tracker
@@ -124,7 +122,6 @@ impl Scraper {
 
         thread::scope(|thread_scope| {
             for _ in 0..8 {
-                let tx = self.transmitter.clone();
                 let rx = self.receiver.clone();
                 let self_clone = &self;
 
@@ -161,7 +158,9 @@ impl Scraper {
 
         diesel::insert_into(pokemon::table)
             .values(&*pokemon)
-            .execute(&mut conn);
+            .execute(&mut conn)
+            .map_err(|err| println!("{:?}", err))
+            .ok();
         let notfound_large = format!("sprites/notfound_large");
         let notfound_small = format!("sprites/notfound_small");
         let notfound_large_data =
@@ -181,20 +180,27 @@ impl Scraper {
 
         diesel::insert_into(pokemon::table)
             .values(&notfound)
-            .execute(&mut conn);
+            .execute(&mut conn)
+            .map_err(|err| println!("{:?}", err))
+            .ok();
 
-        let p = self.pokemon_types.lock().unwrap();
-        let ptypes: Vec<NewPType> = p.clone().into_iter().collect();
+        let ptypes: Vec<NewPType> = self
+            .pokemon_types
+            .lock()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
         let db_types: QueryResult<Vec<PType>> = diesel::insert_into(ptype::table)
             .values(&*ptypes)
             .get_results::<PType>(&mut conn);
         let mut insertable_poke_types: Vec<NewPokemonType> = Vec::new();
         let mut type_hashmap = HashMap::new();
         for db_type in db_types.unwrap().iter() {
-                    let n = db_type.name.clone();
-                    let i = db_type.id;
-                    type_hashmap.insert(n, i);
-                }
+            let n = db_type.name.clone();
+            let i = db_type.id;
+            type_hashmap.insert(n, i);
+        }
         let ptts = self.poke_type_tracker.lock().unwrap();
         for ptt in ptts.iter() {
             let name = &ptt.name;
@@ -205,7 +211,9 @@ impl Scraper {
         }
         diesel::insert_into(pokemon_type::table)
             .values(&insertable_poke_types)
-            .execute(&mut conn);
+            .execute(&mut conn)
+            .map_err(|err| println!("{:?}", err))
+            .ok();
     }
 
     /// Sleep the thread for a variable amount of seconds to avoid getting banned
