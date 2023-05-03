@@ -130,22 +130,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-// fn get_types(pokemon: Pokemon) {
-//     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-//     let mut connection = PgConnection::establish(&database_url)
-//         .expect(&format!("Error connecting to {}", database_url));
-//     let type_relations: QueryResult<Vec<PType>> = diesel::insert_into(ptype::table)
-//             .values(&*ptypes)
-//             .get_results::<PType>(&mut conn);
-
-//     let type_relations = pokemon_type
-//             .filter(pokemon_id.eq(pokemon.pokemon_id))
-//             .expect("Error loading type relations");
-//     let searched_ptype_ids = 
-//     let searched_types = ptype
-//             .filter(id.eq(pokemon.pokemon_id))
-//             .expect("Error loading type pokemon types");
-// }
+fn get_types(pokemon: Pokemon) {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut connection = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+    let type_relations = pokemon_type
+            .filter(pokemon_id.eq(pokemon.pokemon_id))
+            .expect("Error loading type relations");
+    let type_relations_ids: Vec<i32> = type_relations.into_iter().map(|x| x.type_id).collect();
+    let searched_types = ptype
+            .filter(id.eq(type_relations_ids))
+            .expect("Error loading type pokemon types");
+}
 
 fn get_pokemon(app: &App) -> Pokemon {
     match show_pokemon(app.pokemon_search.clone()) {
