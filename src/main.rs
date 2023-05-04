@@ -3,8 +3,12 @@ mod models;
 mod schema;
 mod scraper;
 use crate::pokemon::dsl::pokemon;
+use crate::pokemon_type::dsl::pokemon_type;
+use crate::ptype::dsl::ptype;
 use crate::schema::pokemon::name;
 use crate::schema::pokemon::pokemon_id;
+use crate::schema::pokemon_type::pokemon_id as pokemon_type_id;
+use crate::schema::ptype::id as ptype_id;
 use ansi_to_tui::IntoText;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
@@ -130,23 +134,31 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn get_types(pokemon: Pokemon) {
+fn get_types(spokemon: Pokemon) -> Vec<String> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
     let type_relations = pokemon_type
-            .filter(pokemon_id.eq(pokemon.pokemon_id))
+            .filter(pokemon_type_id.eq(spokemon.pokemon_id))
+            .load::<PokemonType>(&mut connection)
             .expect("Error loading type relations");
     let type_relations_ids: Vec<i32> = type_relations.into_iter().map(|x| x.type_id).collect();
     let searched_types = ptype
-            .filter(id.eq(type_relations_ids))
+            .filter(ptype_id.eq_any(type_relations_ids))
+            .load::<PType>(&mut connection)
             .expect("Error loading type pokemon types");
+    let results: Vec<String> = searched_types.into_iter().map(|x| x.name).collect();
+    results
 }
 
 fn get_pokemon(app: &App) -> Pokemon {
     match show_pokemon(app.pokemon_search.clone()) {
         Ok(db_result) => match db_result {
-            Some(foundpokemon) => foundpokemon,
+            Some(foundpokemon) => {
+                let r = get_types(foundpokemon.clone());
+                println!("{:?}", r);
+                foundpokemon
+            },
             None => match show_pokemon("0".to_string()) {
                 Ok(notfound) => match notfound {
                     Some(notfound) => notfound,
