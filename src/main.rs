@@ -134,34 +134,44 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+struct TUIPokemon {
+    tui_pokemon: Pokemon,
+    tui_types: Vec<String>,
+}
+
 fn get_types(spokemon: Pokemon) -> Vec<String> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
     let type_relations = pokemon_type
-            .filter(pokemon_type_id.eq(spokemon.pokemon_id))
-            .load::<PokemonType>(&mut connection)
-            .expect("Error loading type relations");
+        .filter(pokemon_type_id.eq(spokemon.pokemon_id))
+        .load::<PokemonType>(&mut connection)
+        .expect("Error loading type relations");
     let type_relations_ids: Vec<i32> = type_relations.into_iter().map(|x| x.type_id).collect();
     let searched_types = ptype
-            .filter(ptype_id.eq_any(type_relations_ids))
-            .load::<PType>(&mut connection)
-            .expect("Error loading type pokemon types");
+        .filter(ptype_id.eq_any(type_relations_ids))
+        .load::<PType>(&mut connection)
+        .expect("Error loading type pokemon types");
     let results: Vec<String> = searched_types.into_iter().map(|x| x.name).collect();
     results
 }
 
-fn get_pokemon(app: &App) -> Pokemon {
+fn get_pokemon(app: &App) -> TUIPokemon {
     match show_pokemon(app.pokemon_search.clone()) {
         Ok(db_result) => match db_result {
             Some(foundpokemon) => {
-                let r = get_types(foundpokemon.clone());
-                println!("{:?}", r);
-                foundpokemon
-            },
+                let t = get_types(foundpokemon.clone());
+                TUIPokemon {
+                    tui_pokemon: foundpokemon,
+                    tui_types: t,
+                }
+            }
             None => match show_pokemon("0".to_string()) {
                 Ok(notfound) => match notfound {
-                    Some(notfound) => notfound,
+                    Some(notfound) => TUIPokemon {
+                        tui_pokemon: notfound,
+                        tui_types: vec![],
+                    },
                     None => {
                         panic!("Something went wrong querying not found pokemon");
                     }
@@ -173,7 +183,10 @@ fn get_pokemon(app: &App) -> Pokemon {
         },
         Err(_e) => match show_pokemon("0".to_string()) {
             Ok(notfound) => match notfound {
-                Some(notfound) => notfound,
+                Some(notfound) => TUIPokemon {
+                    tui_pokemon: notfound,
+                    tui_types: vec![],
+                },
                 None => {
                     panic!("Something went wrong querying not found pokemon");
                 }
@@ -210,7 +223,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
     // show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -222,7 +235,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(input, chunks[0]);
-    let large_sprite = pokemon_db_result.large.clone();
+    let large_sprite = pokemon_db_result.tui_pokemon.large.clone();
     let tui_sprite = large_sprite.into_text();
     let text_sprite = tui_sprite.expect("can't parse sprite");
     let paragraph_sprite = Paragraph::new(text_sprite.clone());
@@ -258,7 +271,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
                 Constraint::Percentage(10),
                 Constraint::Percentage(10),
                 Constraint::Percentage(10),
-                Constraint::Percentage(60),
+                Constraint::Percentage(10),
+                Constraint::Percentage(10),
+                Constraint::Percentage(40),
             ]
             .as_ref(),
         )
@@ -289,7 +304,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
         ),
         Span::styled(
-            format!("{}", pokemon_db_result.base_experience),
+            format!("{}", pokemon_db_result.tui_pokemon.base_experience),
             Style::default()
                 .fg(Color::Blue)
                 .add_modifier(Modifier::BOLD),
@@ -306,7 +321,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
         ),
         Span::styled(
-            format!("{}", pokemon_db_result.height),
+            format!("{}", pokemon_db_result.tui_pokemon.height),
             Style::default()
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
@@ -323,7 +338,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
         ),
         Span::styled(
-            format!("{}", pokemon_db_result.weight),
+            format!("{}", pokemon_db_result.tui_pokemon.weight),
             Style::default()
                 .fg(Color::Green)
                 .add_modifier(Modifier::BOLD),
@@ -334,4 +349,24 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: Pokemon) {
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(input, chunks[3]);
+
+    for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+        let h = vec![
+            Span::styled(
+                "Type:",
+                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                format!("{}", tui_type),
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
+        ];
+        let text = Text::from(Spans::from(h));
+        let input = Paragraph::new(text)
+            .style(Style::default().fg(Color::Red))
+            .block(Block::default().borders(Borders::ALL));
+        f.render_widget(input, chunks[index + 4]);
+    }
 }
