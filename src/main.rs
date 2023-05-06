@@ -303,6 +303,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
     f.render_widget(input, chunks[1]);
     let data_chunks = Layout::default()
         .direction(Direction::Vertical)
+        .margin(2)
         .constraints(
             [
                 Constraint::Percentage(10),
