@@ -268,12 +268,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
         .constraints(
             [
                 Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(40),
+                Constraint::Percentage(90),
             ]
             .as_ref(),
         )
@@ -298,6 +293,28 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
         // Move one line down, from the border to the input line
         chunks[0].y + 1,
     );
+    let input = Paragraph::new("")
+        .style(Style::default().fg(Color::Red))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(pokemon_db_result.tui_pokemon.name)
+                );
+    f.render_widget(input, chunks[1]);
+    let data_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage(10),
+                Constraint::Percentage(10),
+                Constraint::Percentage(10),
+                Constraint::Percentage(10),
+                Constraint::Percentage(10),
+                Constraint::Percentage(10),
+            ]
+            .as_ref(),
+        )
+        .split(chunks[1]);
     let h = vec![
         Span::styled(
             "Experience:",
@@ -314,7 +331,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, chunks[1]);
+    f.render_widget(input, data_chunks[0]);
     let h = vec![
         Span::styled(
             "Height:",
@@ -331,7 +348,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, chunks[2]);
+    f.render_widget(input, data_chunks[1]);
     let h = vec![
         Span::styled(
             "Weight:",
@@ -348,7 +365,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, chunks[3]);
+    f.render_widget(input, data_chunks[2]);
 
     for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
         let h = vec![
@@ -367,6 +384,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
         let input = Paragraph::new(text)
             .style(Style::default().fg(Color::Red))
             .block(Block::default().borders(Borders::ALL));
-        f.render_widget(input, chunks[index + 4]);
+        f.render_widget(input, data_chunks[index + 3]);
     }
 }
