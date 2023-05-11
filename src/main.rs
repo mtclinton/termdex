@@ -1,9 +1,9 @@
+mod app;
 mod downloader;
 mod models;
 mod schema;
 mod scraper;
 mod ui;
-mod app;
 use crate::pokemon::dsl::pokemon;
 use crate::pokemon_type::dsl::pokemon_type;
 use crate::ptype::dsl::ptype;
@@ -21,6 +21,8 @@ use diesel::prelude::*;
 use models::*;
 use termdex::models::Pokemon;
 
+use crate::app::App;
+use crate::ui::ui;
 use schema::*;
 use scraper::Scraper;
 use std::env;
@@ -36,9 +38,6 @@ use tui::{
 };
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
-use crate::ui::ui;
-use crate::app::App;
-
 
 #[derive(Debug)]
 struct PokeError(String);
@@ -72,8 +71,6 @@ fn show_pokemon(pokemon_term: String) -> Result<Option<Pokemon>, Box<dyn Error>>
         Ok(pokemon_result)
     }
 }
-
-
 
 fn initialize_pokemon() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -124,8 +121,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
-
 
 fn get_types(spokemon: Pokemon) -> Vec<String> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -210,4 +205,3 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         }
     }
 }
-

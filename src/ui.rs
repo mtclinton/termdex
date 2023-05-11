@@ -1,5 +1,5 @@
 use tui::{
-    backend::{Backend},
+    backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
@@ -8,9 +8,8 @@ use tui::{
 };
 
 use crate::app::App;
-use termdex::models::Pokemon;
 use ansi_to_tui::IntoText;
-
+use termdex::models::Pokemon;
 
 pub struct TUIPokemon {
     pub tui_pokemon: Pokemon,
@@ -59,13 +58,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage(10),
-                Constraint::Percentage(90),
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
         .split(chunks[1]);
 
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
@@ -92,8 +85,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(pokemon_db_result.tui_pokemon.name)
-                );
+                .title(pokemon_db_result.tui_pokemon.name),
+        );
     f.render_widget(input, chunks[1]);
     let data_chunks = Layout::default()
         .direction(Direction::Vertical)
