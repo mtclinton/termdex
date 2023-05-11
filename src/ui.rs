@@ -1,4 +1,23 @@
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
+use tui::{
+    backend::{Backend},
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans, Text},
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
+
+use crate::app::App;
+use termdex::models::Pokemon;
+use ansi_to_tui::IntoText;
+
+
+pub struct TUIPokemon {
+    pub tui_pokemon: Pokemon,
+    pub tui_types: Vec<String>,
+}
+
+pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
     // show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
