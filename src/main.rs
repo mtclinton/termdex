@@ -12,7 +12,7 @@ use crate::schema::pokemon::pokemon_id;
 use crate::schema::pokemon_type::pokemon_id as pokemon_type_id;
 use crate::schema::ptype::id as ptype_id;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -187,19 +187,27 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         terminal.draw(|f| ui(f, &mut app, current_pokemon))?;
 
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Enter => {
-                    let p_input = app.input.value();
-                    app.pokemon_search = p_input.to_string();
-                    app.input.reset();
+            if key.modifiers.is_empty() {
+                match key.code {
+                    KeyCode::Enter => {
+                        let p_input = app.input.value();
+                        app.pokemon_search = p_input.to_string();
+                        app.input.reset();
+                    }
+                    KeyCode::Esc => {
+                        disable_raw_mode()?;
+                        terminal.show_cursor()?;
+                        return Ok(());
+                    }
+                    _ => {
+                        app.input.handle_event(&Event::Key(key));
+                    }
                 }
-                KeyCode::Esc => {
+            } else if key.modifiers == KeyModifiers::CONTROL {
+                if let KeyCode::Char('c') = key.code {
                     disable_raw_mode()?;
                     terminal.show_cursor()?;
                     return Ok(());
-                }
-                _ => {
-                    app.input.handle_event(&Event::Key(key));
                 }
             }
         }
