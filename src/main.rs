@@ -30,14 +30,9 @@ use std::fmt;
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans, Text},
-    widgets::{Block, Borders, Paragraph},
-    Frame, Terminal,
+    Terminal,
 };
 use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
 
 #[derive(Debug)]
 struct PokeError(String);
