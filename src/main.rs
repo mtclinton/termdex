@@ -34,16 +34,6 @@ use tui::{
 };
 use tui_input::backend::crossterm::EventHandler;
 
-#[derive(Debug)]
-struct PokeError(String);
-
-impl fmt::Display for PokeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "There is an error: {}", self.0)
-    }
-}
-
-impl Error for PokeError {}
 
 fn show_pokemon(pokemon_term: String) -> Result<Option<Pokemon>, Box<dyn Error>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
