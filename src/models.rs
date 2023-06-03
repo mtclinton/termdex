@@ -12,6 +12,12 @@ pub struct NewPokemon {
     pub base_experience: i32,
     pub height: i32,
     pub weight: i32,
+    pub hp: Option<i32>,
+    pub attack: Option<i32>,
+    pub defense: Option<i32>,
+    pub special_attack: Option<i32>,
+    pub special_defense: Option<i32>,
+    pub speed: Option<i32>,
 }
 
 #[derive(Debug, Queryable, Serialize, Clone)]
@@ -24,6 +30,12 @@ pub struct Pokemon {
     pub base_experience: i32,
     pub height: i32,
     pub weight: i32,
+    pub hp: Option<i32>,
+    pub attack: Option<i32>,
+    pub defense: Option<i32>,
+    pub special_attack: Option<i32>,
+    pub special_defense: Option<i32>,
+    pub speed: Option<i32>,
 }
 
 #[derive(Debug, Insertable)]
