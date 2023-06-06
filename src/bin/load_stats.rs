@@ -19,6 +19,12 @@ pub struct PokemonAPIData {
     pub height: u64,
     pub moves: Vec<PokeMove>,
     pub weight: u64,
+    pub hp: u64,
+    pub attack: u64,
+    pub defense: u64,
+    pub special_attack: u64,
+    pub special_defense: u64,
+    pub speed: u64,
 }
 
 #[derive(Deserialize)]
@@ -91,6 +97,16 @@ impl Downloader {
         match req.send() {
             Ok(mut response) => {
                 let pokemon_resp: PokemonAPIData = response.json().unwrap();
+                for stat in pokemon_resp.stats.iter() {
+                    match stat.stat.name {
+                        "hp" => pokemon_resp.hp = stat.base_stat,
+                        "attack" => pokemon_resp.attack = stat.base_stat,
+                        "defense" => pokemon_resp.defense = stat.base_stat,
+                        "special_attack" => pokemon_resp.special_attack = stat.base_stat,
+                        "special_defense" => pokemon_resp.special_defense = stat.base_stat,
+                        "speed" => pokemon_resp.speed = stat.base_stat,
+                    }
+                }
                 Ok(pokemon_resp)
             }
 
