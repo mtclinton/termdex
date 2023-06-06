@@ -3,11 +3,14 @@ use diesel::prelude::*;
 use serde::Deserialize;
 use std::env;
 use termdex::models::*;
-use termdex::schema::pokemon::base_experience;
+use termdex::schema::pokemon::attack;
+use termdex::schema::pokemon::defense;
 use termdex::schema::pokemon::dsl::pokemon;
-use termdex::schema::pokemon::height;
+use termdex::schema::pokemon::hp;
 use termdex::schema::pokemon::pokemon_id;
-use termdex::schema::pokemon::weight;
+use termdex::schema::pokemon::special_attack;
+use termdex::schema::pokemon::special_defense;
+use termdex::schema::pokemon::speed;
 
 #[derive(Deserialize)]
 pub struct PokemonAPIData {
@@ -19,12 +22,27 @@ pub struct PokemonAPIData {
     pub height: u64,
     pub moves: Vec<PokeMove>,
     pub weight: u64,
+}
+pub struct StatValues {
     pub hp: u64,
     pub attack: u64,
     pub defense: u64,
     pub special_attack: u64,
     pub special_defense: u64,
     pub speed: u64,
+}
+
+impl Default for StatValues {
+    fn default() -> StatValues {
+        StatValues {
+            hp: 0,
+            attack: 0,
+            defense: 0,
+            special_attack: 0,
+            special_defense: 0,
+            speed: 0,
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -63,14 +81,14 @@ pub struct TypeName {
 
 #[derive(Deserialize)]
 pub struct Stat {
-    base_stat: u64,
+    pub base_stat: u64,
     effort: u64,
-    stat: StatName,
+    pub stat: StatName,
 }
 
 #[derive(Deserialize)]
 pub struct StatName {
-    name: String,
+    pub name: String,
 }
 ///A Downloader to download web content
 pub struct Downloader {
@@ -92,33 +110,36 @@ impl Downloader {
     }
 
     ///Download the content at this url
-    fn make_request(&self, url: &str) -> Result<PokemonAPIData, reqwest::Error> {
+    fn make_request(&self, url: &str) -> Result<StatValues, reqwest::Error> {
         let req = self.client.get(url);
+        println!("{}", url);
         match req.send() {
             Ok(mut response) => {
-                let pokemon_resp: PokemonAPIData = response.json().unwrap();
+                let mut pokemon_resp: PokemonAPIData = response.json().unwrap();
+                let mut statvalues = StatValues::default();
                 for stat in pokemon_resp.stats.iter() {
-                    match stat.stat.name {
-                        "hp" => pokemon_resp.hp = stat.base_stat,
-                        "attack" => pokemon_resp.attack = stat.base_stat,
-                        "defense" => pokemon_resp.defense = stat.base_stat,
-                        "special_attack" => pokemon_resp.special_attack = stat.base_stat,
-                        "special_defense" => pokemon_resp.special_defense = stat.base_stat,
-                        "speed" => pokemon_resp.speed = stat.base_stat,
+                    match &*stat.stat.name {
+                        "hp" => statvalues.hp = stat.base_stat,
+                        "attack" => statvalues.attack = stat.base_stat,
+                        "defense" => statvalues.defense = stat.base_stat,
+                        "special-attack" => statvalues.special_attack = stat.base_stat,
+                        "special-defense" => statvalues.special_defense = stat.base_stat,
+                        "speed" => statvalues.speed = stat.base_stat,
+                        _ => println!("Unknown stat: {}", stat.stat.name),
                     }
                 }
-                Ok(pokemon_resp)
+                Ok(statvalues)
             }
 
             Err(e) => {
-                println!("Downloader.get() has encountered an error: {}", e);
+                println!("Stat scraper has encountered an error: {}", e);
                 Err(e)
             }
         }
     }
 
     ///Download the content of an url and retries at most 'tries' times on failure
-    pub fn get(&self, url: &str) -> Result<PokemonAPIData, reqwest::Error> {
+    pub fn get(&self, url: &str) -> Result<StatValues, reqwest::Error> {
         let mut error: Option<reqwest::Error> = None;
         for _ in 0..self.tries {
             match self.make_request(url) {
@@ -143,23 +164,27 @@ fn main() {
     let downloader = Downloader::new(3, "termdex");
 
     for p in pokemon_db_data.iter() {
-        let url = format!("https://pokeapi.co/api/v2/pokemon/{}", p.name);
-        match downloader.get(&url) {
-            Ok(response) => {
-                diesel::update(pokemon)
-                    .filter(pokemon_id.eq(p.pokemon_id))
-                    .set((
-                        hp.eq(response.hp as i32),
-                        attack.eq(response.attack as i32),
-                        defense.eq(response.defense as i32),
-                        special_attack.eq(response.special_attack as i32),
-                        special_defense.eq(response.special_defense as i32),
-                        speed.eq(response.speed as i32),
-                    ))
-                    .execute(&mut connection);
-            }
-            Err(e) => {
-                println!("Couldn't pokemon {}: {:?}", p.name, e);
+        if p.name == "Not Found" {
+            println!("Skip not found pokemon");
+        } else {
+            let url = format!("https://pokeapi.co/api/v2/pokemon/{}", p.name);
+            match downloader.get(&url) {
+                Ok(response) => {
+                    diesel::update(pokemon)
+                        .filter(pokemon_id.eq(p.pokemon_id))
+                        .set((
+                            hp.eq(response.hp as i32),
+                            attack.eq(response.attack as i32),
+                            defense.eq(response.defense as i32),
+                            special_attack.eq(response.special_attack as i32),
+                            special_defense.eq(response.special_defense as i32),
+                            speed.eq(response.speed as i32),
+                        ))
+                        .execute(&mut connection);
+                }
+                Err(e) => {
+                    println!("Couldn't pokemon {}: {:?}", p.name, e);
+                }
             }
         }
     }
