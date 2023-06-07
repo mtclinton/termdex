@@ -165,7 +165,17 @@ fn main() {
 
     for p in pokemon_db_data.iter() {
         if p.name == "Not Found" {
-            println!("Skip not found pokemon");
+            diesel::update(pokemon)
+                        .filter(pokemon_id.eq(p.pokemon_id))
+                        .set((
+                            hp.eq(0),
+                            attack.eq(0),
+                            defense.eq(0),
+                            special_attack.eq(0),
+                            special_defense.eq(0),
+                            speed.eq(0),
+                        ))
+                        .execute(&mut connection);
         } else {
             let url = format!("https://pokeapi.co/api/v2/pokemon/{}", p.name);
             match downloader.get(&url) {
