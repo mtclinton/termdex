@@ -25,6 +25,28 @@ pub struct PokeTypeTracker {
     name: String,
 }
 
+pub struct StatValues {
+    pub hp: u64,
+    pub attack: u64,
+    pub defense: u64,
+    pub special_attack: u64,
+    pub special_defense: u64,
+    pub speed: u64,
+}
+
+impl Default for StatValues {
+    fn default() -> StatValues {
+        StatValues {
+            hp: 0,
+            attack: 0,
+            defense: 0,
+            special_attack: 0,
+            special_defense: 0,
+            speed: 0,
+        }
+    }
+}
+
 /// Producer and Consumer data structure. Handles the incoming requests and
 /// adds more as new URLs are found
 pub struct Scraper {
@@ -65,6 +87,18 @@ impl Scraper {
         let s_path = format!("sprites/small/{}", data.name);
         let l_data = fs::read_to_string(l_path).expect("Unable to read large sprite");
         let s_data = fs::read_to_string(s_path).expect("Unable to read small sprite");
+        let mut statvalues = StatValues::default();
+        for stat in data.stats.iter() {
+            match &*stat.stat.name {
+                "hp" => statvalues.hp = stat.base_stat,
+                "attack" => statvalues.attack = stat.base_stat,
+                "defense" => statvalues.defense = stat.base_stat,
+                "special-attack" => statvalues.special_attack = stat.base_stat,
+                "special-defense" => statvalues.special_defense = stat.base_stat,
+                "speed" => statvalues.speed = stat.base_stat,
+                _ => println!("Unknown stat: {}", stat.stat.name), // Add error handling here
+            }
+        }
         let new_pokemon = NewPokemon {
             pokemon_id: id as i32,
             name: data.name,
@@ -73,6 +107,12 @@ impl Scraper {
             base_experience: data.base_experience as i32,
             height: data.height as i32,
             weight: data.weight as i32,
+            hp: statvalues.hp as i32,
+            attack: statvalues.attack as i32,
+            defense: statvalues.defense as i32,
+            special_attack: statvalues.special_attack as i32,
+            special_defense: statvalues.special_defense as i32,
+            speed: statvalues.speed as i32,
         };
         for found_type in data.types {
             let npt = NewPType {
@@ -176,6 +216,12 @@ impl Scraper {
             base_experience: -1,
             height: -1,
             weight: -1,
+            hp: -1,
+            attack: -1,
+            defense: -1,
+            special_attack: -1,
+            special_defense: -1,
+            speed: -1,
         };
 
         diesel::insert_into(pokemon::table)
