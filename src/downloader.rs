@@ -48,14 +48,14 @@ pub struct TypeName {
 
 #[derive(Deserialize)]
 pub struct Stat {
-    base_stat: u64,
+    pub base_stat: u64,
     effort: u64,
-    stat: StatName,
+    pub stat: StatName,
 }
 
 #[derive(Deserialize)]
 pub struct StatName {
-    name: String,
+    pub name: String,
 }
 
 ///A Downloader to download web content
