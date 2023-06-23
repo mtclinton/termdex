@@ -3,7 +3,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Gauge},
     Frame,
 };
 
@@ -99,6 +99,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
                 Constraint::Percentage(10),
                 Constraint::Percentage(10),
                 Constraint::Percentage(10),
+                Constraint::Percentage(10),
             ]
             .as_ref(),
         )
@@ -174,4 +175,12 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .block(Block::default().borders(Borders::ALL));
         f.render_widget(input, data_chunks[index + 3]);
     }
+    let label = format!("{}", pokemon_db_result.tui_pokemon.hp);
+    let gauge = Gauge::default()
+        .block(Block::default().title("HP").borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Magenta))
+        .percent(pokemon_db_result.tui_pokemon.hp as u16)
+        .label(label);
+
+    f.render_widget(gauge, data_chunks[6]);
 }
