@@ -3,7 +3,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
-    widgets::{Block, Borders, Paragraph, Gauge},
+    widgets::{Block, Borders, Gauge, Paragraph},
     Frame,
 };
 

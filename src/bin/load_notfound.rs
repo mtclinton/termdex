@@ -33,6 +33,12 @@ fn main() {
         base_experience: -1,
         height: -1,
         weight: -1,
+        hp: -1,
+        attack: -1,
+        defense: -1,
+        special_attack: -1,
+        special_defense: -1,
+        speed: -1,
     };
 
     diesel::insert_into(pokemon)

@@ -106,3 +106,15 @@ impl Downloader {
         Err(error.unwrap())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = 2 + 2;
+        assert_eq!(result, 4);
+        let downloader = Downloader::new(3, "test");
+    }
+}
