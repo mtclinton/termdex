@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct PokemonAPIData {
     pub name: String,
     pub types: Vec<PokeType>,
@@ -12,48 +13,48 @@ pub struct PokemonAPIData {
     pub weight: u64,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct PokeAbility {
     pub ability: PokeAbilityName,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct PokeAbilityName {
     pub name: String,
     pub url: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct PokeMove {
     pub r#move: PokeMoveDetails,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct PokeMoveDetails {
     pub name: String,
     pub url: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct PokeType {
     #[serde(rename = "type")]
     pub poketype: TypeName,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct TypeName {
     pub name: String,
     pub url: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct Stat {
     pub base_stat: u64,
-    effort: u64,
+    pub effort: u64,
     pub stat: StatName,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct StatName {
     pub name: String,
 }
@@ -111,10 +112,58 @@ impl Downloader {
 mod tests {
     use super::*;
 
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    use httpmock::prelude::*;
+    use serde_json::json;
+
+    fn test_expected_response_is_retrieved() {
+        let pokemon_types = vec![PokeType {
+            poketype: TypeName {
+                name: String::from("grass"),
+                url: String::from("https://pokeapi.co/api/v2/type/12/"),
+            },
+        }];
+        let pokemon_stats = vec![Stat {
+            base_stat: 80,
+            effort: 0,
+            stat: StatName {
+                name: String::from("hp"),
+            },
+        }];
+        let pokemon_abilities = vec![PokeAbility {
+            ability: PokeAbilityName {
+                name: String::from("overgrow"),
+                url: String::from("https://pokeapi.co/api/v2/ability/65/"),
+            },
+        }];
+        let pokemon_moves = vec![PokeMove {
+            r#move: PokeMoveDetails {
+                name: String::from("swords-dance"),
+                url: String::from("https://pokeapi.co/api/v2/move/14/"),
+            },
+        }];
+        let expected = PokemonAPIData {
+            name: String::from("bulbasaur"),
+            types: pokemon_types,
+            stats: pokemon_stats,
+            abilities: pokemon_abilities,
+            base_experience: 64,
+            height: 7,
+            moves: pokemon_moves,
+            weight: 69,
+        };
+
+        let server = MockServer::start();
+
         let downloader = Downloader::new(3, "test");
+
+        let _hello_mock = server.mock(|when, then| {
+            when.method(GET).path("/pokemon/1");
+            then.status(200)
+                .header("content-type", "text/json")
+                .json_body(json!(expected));
+        });
+
+        let actual = downloader.get(&(server.base_url() + &String::from("pokemon/1")));
+        assert_eq!(actual.unwrap(), expected);
     }
 }

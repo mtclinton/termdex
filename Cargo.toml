@@ -19,6 +19,10 @@ tui = { package = "ratatui" }
 chrono = "0.4.24"
 thiserror = "1.0.40"
 ansi-to-tui = "3.0.0"
+regex = "1.9.3"
+
+[dev-dependencies]
+httpmock = "0.6.8"
 
 [dependencies.tui-input]
 version = "0.7.0"
