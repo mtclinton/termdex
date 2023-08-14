@@ -158,14 +158,14 @@ mod tests {
         let downloader = Downloader::new(3, "test");
 
         let _hello_mock = server.mock(|when, then| {
-            when.method(GET).path("/pokemon/1");
+            when.method(GET).path("/");
             then.status(200)
                 .header("content-type", "text/json")
                 .json_body(json!(expected));
         });
 
-        let actual = downloader.get(&(server.base_url() + &String::from("pokemon/1"))).unwrap();
+        let actual = downloader.get(&(server.base_url())).unwrap();
         assert_eq!(actual.name, expected.name);
-        assert_eq!(actual.base_experience, 6);
+        assert_eq!(actual.base_experience, 64);
     }
 }
