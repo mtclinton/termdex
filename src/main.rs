@@ -26,7 +26,6 @@ use crate::ui::ui;
 use schema::*;
 use scraper::Scraper;
 use std::env;
-use std::fmt;
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
