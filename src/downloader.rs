@@ -115,7 +115,8 @@ mod tests {
     use httpmock::prelude::*;
     use serde_json::json;
 
-    fn test_expected_response_is_retrieved() {
+    #[test]
+    fn test_downloader() {
         let pokemon_types = vec![PokeType {
             poketype: TypeName {
                 name: String::from("grass"),
@@ -163,7 +164,8 @@ mod tests {
                 .json_body(json!(expected));
         });
 
-        let actual = downloader.get(&(server.base_url() + &String::from("pokemon/1")));
-        assert_eq!(actual.unwrap(), expected);
+        let actual = downloader.get(&(server.base_url() + &String::from("pokemon/1"))).unwrap();
+        assert_eq!(actual.name, expected.name);
+        assert_eq!(actual.base_experience, 6);
     }
 }

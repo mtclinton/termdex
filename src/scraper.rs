@@ -277,3 +277,69 @@ impl Scraper {
         std::thread::sleep(delay_duration);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_scraper() {
+        let pokemon_types = vec![downloader::PokeType {
+            poketype: downloader::TypeName {
+                name: String::from("grass"),
+                url: String::from("https://pokeapi.co/api/v2/type/12/"),
+            },
+        }];
+        let pokemon_stats = vec![downloader::Stat {
+            base_stat: 80,
+            effort: 0,
+            stat: downloader::StatName {
+                name: String::from("hp"),
+            },
+        }];
+        let pokemon_abilities = vec![downloader::PokeAbility {
+            ability: downloader::PokeAbilityName {
+                name: String::from("overgrow"),
+                url: String::from("https://pokeapi.co/api/v2/ability/65/"),
+            },
+        }];
+        let pokemon_moves = vec![downloader::PokeMove {
+            r#move: downloader::PokeMoveDetails {
+                name: String::from("swords-dance"),
+                url: String::from("https://pokeapi.co/api/v2/move/14/"),
+            },
+        }];
+        let pokemon_api_data = downloader::PokemonAPIData {
+            name: String::from("bulbasaur"),
+            types: pokemon_types,
+            stats: pokemon_stats,
+            abilities: pokemon_abilities,
+            base_experience: 64,
+            height: 7,
+            moves: pokemon_moves,
+            weight: 69,
+        };
+
+        let expected = vec![NewPokemon {
+            pokemon_id: 1,
+            name: String::from("bulbasaur"),
+            large: String::from("bulbasaur"),
+            small: String::from("bulbasaur"),
+            base_experience: 1,
+            height: 1,
+            weight: 1,
+            hp: 1,
+            attack: 1,
+            defense: 1,
+            special_attack: 1,
+            special_defense: 1,
+            speed: 1,
+        }];
+
+        let mut scraper = Scraper::new();
+
+        let actual = Scraper::save_pokemon(&scraper, pokemon_api_data, 1);
+        let guard = scraper.pokemon_data.lock().unwrap();
+        let protected_value = &*guard;
+        assert_eq!(*protected_value, expected);
+    }
+}
