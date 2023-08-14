@@ -165,7 +165,8 @@ mod tests {
         });
 
         let actual = downloader.get(&(server.base_url())).unwrap();
-        assert_eq!(actual.name, expected.name);
+        assert_eq!(actual.name, "bulbasaur");
         assert_eq!(actual.base_experience, 64);
+        assert_eq!(actual, expected);
     }
 }

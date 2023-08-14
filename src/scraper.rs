@@ -282,6 +282,7 @@ impl Scraper {
 mod tests {
     use super::*;
 
+    #[test]
     fn test_scraper() {
         let pokemon_types = vec![downloader::PokeType {
             poketype: downloader::TypeName {
@@ -319,20 +320,25 @@ mod tests {
             weight: 69,
         };
 
+        let l_data =
+            fs::read_to_string("sprites/large/bulbasaur").expect("Unable to read large sprite");
+        let s_data =
+            fs::read_to_string("sprites/small/bulbasaur").expect("Unable to read small sprite");
+
         let expected = vec![NewPokemon {
             pokemon_id: 1,
             name: String::from("bulbasaur"),
-            large: String::from("bulbasaur"),
-            small: String::from("bulbasaur"),
-            base_experience: 1,
-            height: 1,
-            weight: 1,
-            hp: 1,
-            attack: 1,
-            defense: 1,
-            special_attack: 1,
-            special_defense: 1,
-            speed: 1,
+            large: l_data,
+            small: s_data,
+            base_experience: 64,
+            height: 7,
+            weight: 69,
+            hp: 80,
+            attack: 0,
+            defense: 0,
+            special_attack: 0,
+            special_defense: 0,
+            speed: 0,
         }];
 
         let mut scraper = Scraper::new();
