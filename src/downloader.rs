@@ -158,13 +158,13 @@ mod tests {
         let downloader = Downloader::new(3, "test");
 
         let _hello_mock = server.mock(|when, then| {
-            when.method(GET).path("/");
+            when.method(GET).path("/pokemon/1");
             then.status(200)
                 .header("content-type", "text/json")
                 .json_body(json!(expected));
         });
 
-        let actual = downloader.get(&(server.base_url())).unwrap();
+        let actual = downloader.get(&server.url("/pokemon/1")).unwrap();
         assert_eq!(actual.name, "bulbasaur");
         assert_eq!(actual.base_experience, 64);
         assert_eq!(actual, expected);
