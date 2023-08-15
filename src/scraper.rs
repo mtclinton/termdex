@@ -57,6 +57,7 @@ pub struct Scraper {
     pokemon_data: Mutex<Vec<NewPokemon>>,
     pokemon_types: Mutex<HashSet<NewPType>>,
     poke_type_tracker: Mutex<Vec<PokeTypeTracker>>,
+    max_stat: Mutex<StatValues>,
 }
 
 impl Scraper {
@@ -72,6 +73,7 @@ impl Scraper {
             pokemon_data: Mutex::new(Vec::<NewPokemon>::new()),
             pokemon_types: Mutex::new(HashSet::new()),
             poke_type_tracker: Mutex::new(Vec::<PokeTypeTracker>::new()),
+            max_stat: Mutex::new(StatValues::default()),
         }
     }
 
@@ -88,14 +90,45 @@ impl Scraper {
         let l_data = fs::read_to_string(l_path).expect("Unable to read large sprite");
         let s_data = fs::read_to_string(s_path).expect("Unable to read small sprite");
         let mut statvalues = StatValues::default();
+        let mut updated_max_stat = scraper.max_stat.lock().unwrap();
         for stat in data.stats.iter() {
             match &*stat.stat.name {
-                "hp" => statvalues.hp = stat.base_stat,
-                "attack" => statvalues.attack = stat.base_stat,
-                "defense" => statvalues.defense = stat.base_stat,
-                "special-attack" => statvalues.special_attack = stat.base_stat,
-                "special-defense" => statvalues.special_defense = stat.base_stat,
-                "speed" => statvalues.speed = stat.base_stat,
+                "hp" => {
+                    statvalues.hp = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.hp {
+                        updated_max_stat.hp = stat.base_stat;
+                    }
+                }
+                "attack" => {
+                    statvalues.attack = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.attack {
+                        updated_max_stat.hp = stat.base_stat;
+                    }
+                }
+                "defense" => {
+                    statvalues.defense = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.defense {
+                        updated_max_stat.defense = stat.base_stat;
+                    }
+                }
+                "special-attack" => {
+                    statvalues.special_attack = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.special_attack {
+                        updated_max_stat.special_attack = stat.base_stat;
+                    }
+                }
+                "special-defense" => {
+                    statvalues.special_defense = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.special_defense {
+                        updated_max_stat.special_defense = stat.base_stat;
+                    }
+                }
+                "speed" => {
+                    statvalues.speed = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.speed {
+                        updated_max_stat.speed = stat.base_stat;
+                    }
+                }
                 _ => println!("Unknown stat: {}", stat.stat.name), // Add error handling here
             }
         }
