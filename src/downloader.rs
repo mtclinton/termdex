@@ -163,14 +163,9 @@ mod tests {
                 .json_body(json!(expected));
         });
 
-<<<<<<< HEAD
-        let actual = downloader.get(&(server.base_url() + &String::from("pokemon/1")));
-        assert_eq!(actual.unwrap(), expected);
-=======
         let actual = downloader.get(&server.url("/pokemon/1")).unwrap();
         assert_eq!(actual.name, "bulbasaur");
         assert_eq!(actual.base_experience, 64);
         assert_eq!(actual, expected);
->>>>>>> Add scraper creation of max stats
     }
 }
