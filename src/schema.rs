@@ -1,6 +1,18 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    max_stats (id) {
+        id -> Int4,
+        hp -> Int4,
+        attack -> Int4,
+        defense -> Int4,
+        special_attack -> Int4,
+        special_defense -> Int4,
+        speed -> Int4,
+    }
+}
+
+diesel::table! {
     pokemon (id) {
         id -> Int4,
         pokemon_id -> Int4,
@@ -35,4 +47,4 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(pokemon, pokemon_type, ptype,);
+diesel::allow_tables_to_appear_in_same_query!(max_stats, pokemon, pokemon_type, ptype,);

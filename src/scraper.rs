@@ -57,7 +57,7 @@ pub struct Scraper {
     pokemon_data: Mutex<Vec<NewPokemon>>,
     pokemon_types: Mutex<HashSet<NewPType>>,
     poke_type_tracker: Mutex<Vec<PokeTypeTracker>>,
-    max_stat: Mutex<StatValues>,
+    max_stat: Mutex<NewMaxStats>,
 }
 
 impl Scraper {
@@ -73,7 +73,7 @@ impl Scraper {
             pokemon_data: Mutex::new(Vec::<NewPokemon>::new()),
             pokemon_types: Mutex::new(HashSet::new()),
             poke_type_tracker: Mutex::new(Vec::<PokeTypeTracker>::new()),
-            max_stat: Mutex::new(StatValues::default()),
+            max_stat: Mutex::new(NewMaxStats::default()),
         }
     }
 
@@ -95,38 +95,38 @@ impl Scraper {
             match &*stat.stat.name {
                 "hp" => {
                     statvalues.hp = stat.base_stat;
-                    if stat.base_stat > updated_max_stat.hp {
-                        updated_max_stat.hp = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.hp.try_into().unwrap() {
+                        updated_max_stat.hp = stat.base_stat as i32;
                     }
                 }
                 "attack" => {
                     statvalues.attack = stat.base_stat;
-                    if stat.base_stat > updated_max_stat.attack {
-                        updated_max_stat.hp = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.attack.try_into().unwrap() {
+                        updated_max_stat.attack = stat.base_stat as i32;
                     }
                 }
                 "defense" => {
                     statvalues.defense = stat.base_stat;
-                    if stat.base_stat > updated_max_stat.defense {
-                        updated_max_stat.defense = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.defense.try_into().unwrap() {
+                        updated_max_stat.defense = stat.base_stat as i32;
                     }
                 }
                 "special-attack" => {
                     statvalues.special_attack = stat.base_stat;
-                    if stat.base_stat > updated_max_stat.special_attack {
-                        updated_max_stat.special_attack = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.special_attack.try_into().unwrap() {
+                        updated_max_stat.special_attack = stat.base_stat as i32;
                     }
                 }
                 "special-defense" => {
                     statvalues.special_defense = stat.base_stat;
-                    if stat.base_stat > updated_max_stat.special_defense {
-                        updated_max_stat.special_defense = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.special_defense.try_into().unwrap() {
+                        updated_max_stat.special_defense = stat.base_stat as i32;
                     }
                 }
                 "speed" => {
                     statvalues.speed = stat.base_stat;
-                    if stat.base_stat > updated_max_stat.speed {
-                        updated_max_stat.speed = stat.base_stat;
+                    if stat.base_stat > updated_max_stat.speed.try_into().unwrap() {
+                        updated_max_stat.speed = stat.base_stat as i32;
                     }
                 }
                 _ => println!("Unknown stat: {}", stat.stat.name), // Add error handling here
@@ -290,6 +290,12 @@ impl Scraper {
         }
         diesel::insert_into(pokemon_type::table)
             .values(&insertable_poke_types)
+            .execute(&mut conn)
+            .map_err(|err| println!("{:?}", err))
+            .ok();
+        let ms = self.max_stat.lock().unwrap();
+        diesel::insert_into(max_stats::table)
+            .values(&*ms)
             .execute(&mut conn)
             .map_err(|err| println!("{:?}", err))
             .ok();
