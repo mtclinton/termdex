@@ -10,13 +10,22 @@ use tui::{
 use crate::app::App;
 use ansi_to_tui::IntoText;
 use termdex::models::Pokemon;
+use termdex::models::MaxStats;
 
 pub struct TUIPokemon {
     pub tui_pokemon: Pokemon,
     pub tui_types: Vec<String>,
 }
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon) {
+pub fn capitalize(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
+pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats) {
     // show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -85,7 +94,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(pokemon_db_result.tui_pokemon.name),
+                .title(capitalize(&pokemon_db_result.tui_pokemon.name)),
         );
     f.render_widget(input, chunks[1]);
     let data_chunks = Layout::default()
@@ -175,11 +184,11 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .block(Block::default().borders(Borders::ALL));
         f.render_widget(input, data_chunks[index + 3]);
     }
-    let label = format!("{}", pokemon_db_result.tui_pokemon.hp);
+    let label = format!("{}", (pokemon_db_result.tui_pokemon.hp*100)/ms.hp);
     let gauge = Gauge::default()
         .block(Block::default().title("HP").borders(Borders::ALL))
         .gauge_style(Style::default().fg(Color::Magenta))
-        .percent(pokemon_db_result.tui_pokemon.hp as u16)
+        .percent(((pokemon_db_result.tui_pokemon.hp*100)/ms.hp) as u16)
         .label(label);
 
     f.render_widget(gauge, data_chunks[6]);

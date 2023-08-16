@@ -6,6 +6,7 @@ mod scraper;
 mod ui;
 use crate::pokemon::dsl::pokemon;
 use crate::pokemon_type::dsl::pokemon_type;
+use crate::max_stats::dsl::max_stats;
 use crate::ptype::dsl::ptype;
 use crate::schema::pokemon::name;
 use crate::schema::pokemon::pokemon_id;
@@ -20,6 +21,8 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use models::*;
 use termdex::models::Pokemon;
+use termdex::models::MaxStats;
+
 
 use crate::app::App;
 use crate::ui::ui;
@@ -123,6 +126,17 @@ fn get_types(spokemon: Pokemon) -> Vec<String> {
     results
 }
 
+fn get_max_stats() -> MaxStats {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut connection = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+    let ms = max_stats
+        .first::<MaxStats>(&mut connection)
+        .expect("Error loading max stats");
+    ms
+}
+
+
 fn get_pokemon(app: &App) -> ui::TUIPokemon {
     match show_pokemon(app.pokemon_search.clone()) {
         Ok(db_result) => match db_result {
@@ -168,7 +182,8 @@ fn get_pokemon(app: &App) -> ui::TUIPokemon {
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
         let current_pokemon = get_pokemon(&mut app);
-        terminal.draw(|f| ui(f, &mut app, current_pokemon))?;
+        let ms = get_max_stats();
+        terminal.draw(|f| ui(f, &mut app, current_pokemon, ms))?;
 
         if let Event::Key(key) = event::read()? {
             if key.modifiers.is_empty() {
