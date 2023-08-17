@@ -3,7 +3,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
-    widgets::{Block, Borders, Gauge, Paragraph},
+    widgets::{Block, Borders, Gauge, Paragraph, Wrap},
     Frame,
 };
 
@@ -113,22 +113,17 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .as_ref(),
         )
         .split(chunks[1]);
-    let h = vec![
-        Span::styled(
-            "Experience:",
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(
-            format!("{}", pokemon_db_result.tui_pokemon.base_experience),
-            Style::default()
-                .fg(Color::Blue)
-                .add_modifier(Modifier::BOLD),
-        ),
-    ];
+    let h = vec![Span::styled(
+        format!("{}", pokemon_db_result.tui_pokemon.entry),
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD),
+    )];
     let text = Text::from(Spans::from(h));
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
-        .block(Block::default().borders(Borders::ALL));
+        .block(Block::default().borders(Borders::NONE))
+        .wrap(Wrap { trim: true });
     f.render_widget(input, data_chunks[0]);
     let h = vec![
         Span::styled(
