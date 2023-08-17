@@ -59,6 +59,22 @@ pub struct StatName {
     pub name: String,
 }
 
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
+pub struct EntriesAPIData {
+    pub flavor_text_entries: Vec<Entry>,
+}
+
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
+pub struct Entry {
+    pub flavor_text: String,
+    pub language: EntryLanguage,
+}
+
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
+pub struct EntryLanguage {
+    pub name: String,
+}
+
 ///A Downloader to download web content
 pub struct Downloader {
     client: reqwest::blocking::Client,
@@ -106,6 +122,34 @@ impl Downloader {
 
         Err(error.unwrap())
     }
+
+    fn make_entry_request(&self, url: &str) -> Result<EntriesAPIData, reqwest::Error> {
+        let req = self.client.get(url);
+        match req.send() {
+            Ok(response) => {
+                let entries: EntriesAPIData = response.json().unwrap();
+                Ok(entries)
+            }
+
+            Err(e) => {
+                println!("Downloader.get_entry() has encountered an error: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    ///Download the content of an url and retries at most 'tries' times on failure
+    pub fn get_entry(&self, url: &str) -> Result<EntriesAPIData, reqwest::Error> {
+        let mut error: Option<reqwest::Error> = None;
+        for _ in 0..self.tries {
+            match self.make_entry_request(url) {
+                Ok(response) => return Ok(response),
+                Err(e) => error = Some(e),
+            }
+        }
+
+        Err(error.unwrap())
+    }
 }
 
 #[cfg(test)]
@@ -115,6 +159,7 @@ mod tests {
     use httpmock::prelude::*;
     use serde_json::json;
 
+    #[test]
     fn test_expected_response_is_retrieved() {
         let pokemon_types = vec![PokeType {
             poketype: TypeName {

@@ -9,8 +9,8 @@ use tui::{
 
 use crate::app::App;
 use ansi_to_tui::IntoText;
-use termdex::models::Pokemon;
 use termdex::models::MaxStats;
+use termdex::models::Pokemon;
 
 pub struct TUIPokemon {
     pub tui_pokemon: Pokemon,
@@ -184,11 +184,11 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .block(Block::default().borders(Borders::ALL));
         f.render_widget(input, data_chunks[index + 3]);
     }
-    let label = format!("{}", (pokemon_db_result.tui_pokemon.hp*100)/ms.hp);
+    let label = format!("{}", (pokemon_db_result.tui_pokemon.hp * 100) / ms.hp);
     let gauge = Gauge::default()
         .block(Block::default().title("HP").borders(Borders::ALL))
         .gauge_style(Style::default().fg(Color::Magenta))
-        .percent(((pokemon_db_result.tui_pokemon.hp*100)/ms.hp) as u16)
+        .percent(((pokemon_db_result.tui_pokemon.hp * 100) / ms.hp) as u16)
         .label(label);
 
     f.render_widget(gauge, data_chunks[6]);

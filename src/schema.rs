@@ -28,6 +28,7 @@ diesel::table! {
         special_attack -> Int4,
         special_defense -> Int4,
         speed -> Int4,
+        entry -> Text,
     }
 }
 

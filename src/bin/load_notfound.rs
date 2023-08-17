@@ -39,6 +39,7 @@ fn main() {
         special_attack: -1,
         special_defense: -1,
         speed: -1,
+        entry: "Pokemon not found".to_string(),
     };
 
     diesel::insert_into(pokemon)

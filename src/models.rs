@@ -18,6 +18,7 @@ pub struct NewPokemon {
     pub special_attack: i32,
     pub special_defense: i32,
     pub speed: i32,
+    pub entry: String,
 }
 
 #[derive(Debug, Queryable, Serialize, Clone)]
@@ -36,6 +37,7 @@ pub struct Pokemon {
     pub special_attack: i32,
     pub special_defense: i32,
     pub speed: i32,
+    pub entry: String,
 }
 
 #[derive(Debug, Insertable)]

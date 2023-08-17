@@ -4,9 +4,9 @@ mod models;
 mod schema;
 mod scraper;
 mod ui;
+use crate::max_stats::dsl::max_stats;
 use crate::pokemon::dsl::pokemon;
 use crate::pokemon_type::dsl::pokemon_type;
-use crate::max_stats::dsl::max_stats;
 use crate::ptype::dsl::ptype;
 use crate::schema::pokemon::name;
 use crate::schema::pokemon::pokemon_id;
@@ -20,9 +20,8 @@ use crossterm::{
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use models::*;
-use termdex::models::Pokemon;
 use termdex::models::MaxStats;
-
+use termdex::models::Pokemon;
 
 use crate::app::App;
 use crate::ui::ui;
@@ -135,7 +134,6 @@ fn get_max_stats() -> MaxStats {
         .expect("Error loading max stats");
     ms
 }
-
 
 fn get_pokemon(app: &App) -> ui::TUIPokemon {
     match show_pokemon(app.pokemon_search.clone()) {

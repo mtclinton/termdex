@@ -47,8 +47,6 @@ impl Default for StatValues {
     }
 }
 
-/// Producer and Consumer data structure. Handles the incoming requests and
-/// adds more as new URLs are found
 pub struct Scraper {
     transmitter: Sender<(String, u64)>,
     receiver: Receiver<(String, u64)>,
@@ -84,7 +82,12 @@ impl Scraper {
         }
     }
 
-    fn save_pokemon(scraper: &Scraper, data: downloader::PokemonAPIData, id: u64) {
+    fn save_pokemon(
+        scraper: &Scraper,
+        data: downloader::PokemonAPIData,
+        entry_data: String,
+        id: u64,
+    ) {
         let l_path = format!("sprites/large/{}", data.name);
         let s_path = format!("sprites/small/{}", data.name);
         let l_data = fs::read_to_string(l_path).expect("Unable to read large sprite");
@@ -146,6 +149,7 @@ impl Scraper {
             special_attack: statvalues.special_attack as i32,
             special_defense: statvalues.special_defense as i32,
             speed: statvalues.speed as i32,
+            entry: entry_data,
         };
         for found_type in data.types {
             let npt = NewPType {
@@ -168,10 +172,36 @@ impl Scraper {
     }
 
     /// Process a single URL
+    fn handle_entry_url(scraper: &Scraper, url: &str) -> String {
+        println!("Visiting: {}", url);
+        match scraper.downloader.get_entry(url) {
+            Ok(response) => {
+                for entry in response.flavor_text_entries.iter() {
+                    if entry.language.name == "en" {
+                        return entry
+                            .flavor_text
+                            .clone()
+                            .replace("\n", " ")
+                            .replace("\u{000c}", " ");
+                    }
+                }
+                return format!("Entry not found {:?}", url);
+            }
+            Err(e) => {
+                return format!("Error downloading a entry, {:?}", e);
+            }
+        }
+    }
+
+    /// Process a single URL
     fn handle_url(scraper: &Scraper, url: &str, id: u64) {
         match scraper.downloader.get(url) {
             Ok(response) => {
-                Scraper::save_pokemon(scraper, response, id);
+                let mut entry_data = Scraper::handle_entry_url(
+                    scraper,
+                    &format!("https://pokeapi.co/api/v2/pokemon-species/{}", id),
+                );
+                Scraper::save_pokemon(scraper, response, entry_data, id);
             }
             Err(e) => {
                 println!("Couldn't download a page, {:?}", e);
@@ -255,6 +285,7 @@ impl Scraper {
             special_attack: -1,
             special_defense: -1,
             speed: -1,
+            entry: "Pokemon not found".to_string(),
         };
 
         diesel::insert_into(pokemon::table)
@@ -376,10 +407,11 @@ mod tests {
             special_attack: 0,
             special_defense: 0,
             speed: 0,
+            entry: "Test entry".to_string(),
         }];
 
         let mut scraper = Scraper::new();
-        let actual = Scraper::save_pokemon(&scraper, pokemon_api_data, 1);
+        let actual = Scraper::save_pokemon(&scraper, pokemon_api_data, format!("Test entry"), 1);
         let guard = scraper.pokemon_data.lock().unwrap();
         let protected_value = &*guard;
         assert_eq!(*protected_value, expected);

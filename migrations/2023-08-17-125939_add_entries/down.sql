@@ -1,0 +1,2 @@
+ALTER TABLE pokemon
+DROP COLUMN entry TEXT;
