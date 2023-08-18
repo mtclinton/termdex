@@ -1,6 +1,6 @@
 use tui::{
     backend::Backend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
     widgets::{Block, Borders, Gauge, Paragraph, Wrap},
@@ -103,12 +103,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
         .constraints(
             [
                 Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
-                Constraint::Percentage(10),
+                Constraint::Percentage(40),
+                Constraint::Percentage(50),
             ]
             .as_ref(),
         )
@@ -125,66 +121,187 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
         .block(Block::default().borders(Borders::NONE))
         .wrap(Wrap { trim: true });
     f.render_widget(input, data_chunks[0]);
-    let h = vec![
-        Span::styled(
-            "Height:",
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(
-            format!("{}", pokemon_db_result.tui_pokemon.height),
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        ),
-    ];
-    let text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text)
-        .style(Style::default().fg(Color::Red))
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, data_chunks[1]);
-    let h = vec![
-        Span::styled(
-            "Weight:",
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(
-            format!("{}", pokemon_db_result.tui_pokemon.weight),
-            Style::default()
-                .fg(Color::Green)
-                .add_modifier(Modifier::BOLD),
-        ),
-    ];
-    let text = Text::from(Spans::from(h));
-    let input = Paragraph::new(text)
-        .style(Style::default().fg(Color::Red))
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(input, data_chunks[2]);
 
-    for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
-        let h = vec![
-            Span::styled(
-                "Type:",
-                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(
+    let info_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(50)].as_ref())
+        .split(data_chunks[1]);
+    let height_weight_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .margin(1)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(info_chunks[0]);
+    let h = vec![Span::styled(
+        format!("{}", pokemon_db_result.tui_pokemon.height),
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD),
+    )];
+    let text = Text::from(Spans::from(h));
+    let input = Paragraph::new(text)
+        .style(Style::default().fg(Color::Red))
+        .alignment(Alignment::Center)
+        .block(Block::default().title("Height").borders(Borders::ALL));
+    f.render_widget(input, height_weight_chunks[0]);
+    let w = vec![Span::styled(
+        format!("{}", pokemon_db_result.tui_pokemon.weight),
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD),
+    )];
+    let text = Text::from(Spans::from(w));
+    let input = Paragraph::new(text)
+        .style(Style::default().fg(Color::Red))
+        .alignment(Alignment::Center)
+        .block(Block::default().title("Weight").borders(Borders::ALL));
+    f.render_widget(input, height_weight_chunks[1]);
+
+    if pokemon_db_result.tui_types.len() == 1 {
+        let type_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .margin(2)
+            .constraints(
+                [
+                    Constraint::Percentage(25),
+                    Constraint::Percentage(50),
+                    Constraint::Percentage(25),
+                ]
+                .as_ref(),
+            )
+            .split(info_chunks[1]);
+        for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+            let h = vec![Span::styled(
                 format!("{}", tui_type),
                 Style::default()
-                    .fg(Color::Green)
+                    .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
-            ),
-        ];
-        let text = Text::from(Spans::from(h));
-        let input = Paragraph::new(text)
-            .style(Style::default().fg(Color::Red))
-            .block(Block::default().borders(Borders::ALL));
-        f.render_widget(input, data_chunks[index + 3]);
+            )];
+            let text = Text::from(Spans::from(h));
+            let input = Paragraph::new(text)
+                .style(Style::default().fg(Color::Red))
+                .alignment(Alignment::Center)
+                .block(Block::default().title("Type").borders(Borders::ALL));
+            f.render_widget(input, type_chunks[1]);
+        }
+    } else {
+        let type_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .margin(1)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+            .split(info_chunks[1]);
+        for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+            let h = vec![Span::styled(
+                format!("{}", tui_type),
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            )];
+            let text = Text::from(Spans::from(h));
+            let input = Paragraph::new(text)
+                .style(Style::default().fg(Color::Red))
+                .alignment(Alignment::Center)
+                .block(Block::default().title("Type").borders(Borders::ALL));
+            f.render_widget(input, type_chunks[index]);
+        }
     }
-    let label = format!("{}", (pokemon_db_result.tui_pokemon.hp * 100) / ms.hp);
-    let gauge = Gauge::default()
-        .block(Block::default().title("HP").borders(Borders::ALL))
-        .gauge_style(Style::default().fg(Color::Magenta))
-        .percent(((pokemon_db_result.tui_pokemon.hp * 100) / ms.hp) as u16)
-        .label(label);
 
-    f.render_widget(gauge, data_chunks[6]);
+    // let text = Text::from(Spans::from(h));
+    // let input = Paragraph::new(text)
+    //     .style(Style::default().fg(Color::Red))
+    //     .block(Block::default().borders(Borders::ALL));
+    // f.render_widget(input, data_chunks[2]);
+
+    // for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+    //     let h = vec![
+    //         Span::styled(
+    //             "Type:",
+    //             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+    //         ),
+    //         Span::styled(
+    //             format!("{}", tui_type),
+    //             Style::default()
+    //                 .fg(Color::Green)
+    //                 .add_modifier(Modifier::BOLD),
+    //         ),
+    //     ];
+    //     let text = Text::from(Spans::from(h));
+    //     let input = Paragraph::new(text)
+    //         .style(Style::default().fg(Color::Red))
+    //         .block(Block::default().borders(Borders::ALL));
+    //     f.render_widget(input, data_chunks[index + 3]);
+    // }
+
+    let hp_label = format!("{}", pokemon_db_result.tui_pokemon.hp);
+    let hp_gauge = Gauge::default()
+        .block(Block::default().title("HP").borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Yellow))
+        .percent(((pokemon_db_result.tui_pokemon.hp * 100) / ms.hp) as u16)
+        .label(hp_label);
+
+    let attack_label = format!("{}", pokemon_db_result.tui_pokemon.attack);
+    let attack_gauge = Gauge::default()
+        .block(Block::default().title("Attack").borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Yellow))
+        .percent(((pokemon_db_result.tui_pokemon.attack * 100) / ms.attack) as u16)
+        .label(attack_label);
+
+    let defense_label = format!("{}", pokemon_db_result.tui_pokemon.defense);
+    let defense_gauge = Gauge::default()
+        .block(Block::default().title("Defense").borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Yellow))
+        .percent(((pokemon_db_result.tui_pokemon.defense * 100) / ms.defense) as u16)
+        .label(defense_label);
+
+    let special_attack_label = format!("{}", pokemon_db_result.tui_pokemon.special_attack);
+    let special_attack_gauge = Gauge::default()
+        .block(
+            Block::default()
+                .title("Special Attack")
+                .borders(Borders::ALL),
+        )
+        .gauge_style(Style::default().fg(Color::Yellow))
+        .percent(((pokemon_db_result.tui_pokemon.special_attack * 100) / ms.special_attack) as u16)
+        .label(special_attack_label);
+
+    let special_defense_label = format!("{}", pokemon_db_result.tui_pokemon.special_defense);
+    let special_defense_gauge = Gauge::default()
+        .block(
+            Block::default()
+                .title("Special Defense")
+                .borders(Borders::ALL),
+        )
+        .gauge_style(Style::default().fg(Color::Yellow))
+        .percent(
+            ((pokemon_db_result.tui_pokemon.special_defense * 100) / ms.special_defense) as u16,
+        )
+        .label(special_defense_label);
+
+    let speed_label = format!("{}", pokemon_db_result.tui_pokemon.speed);
+    let speed_gauge = Gauge::default()
+        .block(Block::default().title("Speed").borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Yellow))
+        .percent(((pokemon_db_result.tui_pokemon.speed * 100) / ms.speed) as u16)
+        .label(speed_label);
+
+    let guage_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(4),
+            ]
+            .as_ref(),
+        )
+        .split(data_chunks[2]);
+    f.render_widget(hp_gauge, guage_chunks[0]);
+    f.render_widget(attack_gauge, guage_chunks[1]);
+    f.render_widget(defense_gauge, guage_chunks[2]);
+    f.render_widget(special_attack_gauge, guage_chunks[3]);
+    f.render_widget(special_defense_gauge, guage_chunks[4]);
+    f.render_widget(speed_gauge, guage_chunks[5]);
 }
