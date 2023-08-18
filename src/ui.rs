@@ -39,7 +39,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
     f.render_widget(input, chunks[0]);
     let large_sprite = pokemon_db_result.tui_pokemon.large.clone();
     let tui_sprite = large_sprite.into_text();
-    let text_sprite = tui_sprite.expect("can't parse sprite");
+    let text_sprite = tui_sprite.expect("can't parse large sprite");
     let paragraph_sprite = Paragraph::new(text_sprite.clone());
 
     // add color to not found sprite
@@ -55,15 +55,47 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             sprite_width = line.width();
         }
     }
-    let sprite_x = (width as u16 - sprite_width as u16) / 2;
-    let sprite_y = (height as u16 - sprite_height as u16) / 2;
-    let area = Rect::new(
-        sprite_x,
-        sprite_y,
-        sprite_width as u16,
-        sprite_height as u16,
-    );
-    f.render_widget(sprite, area);
+
+    // let render_large_sprite = || -> Result<(), io::Error> {
+    if sprite_height < height.into() && sprite_width < width.into() {
+        let sprite_x = (width as u16 - sprite_width as u16) / 2;
+        let sprite_y = (height as u16 - sprite_height as u16) / 2;
+        let area = Rect::new(
+            sprite_x,
+            sprite_y,
+            sprite_width as u16,
+            sprite_height as u16,
+        );
+        f.render_widget(sprite, area);
+    } else {
+        let small_sprite = pokemon_db_result.tui_pokemon.small.clone();
+        let small_tui_sprite = small_sprite.into_text();
+        let small_text_sprite = small_tui_sprite.expect("can't parse small sprite");
+        let small_paragraph_sprite = Paragraph::new(small_text_sprite.clone());
+
+        // add color to not found sprite
+        let small_para_sprite = small_paragraph_sprite.style(Style::default().fg(Color::Blue));
+
+        let small_sprite_height = small_text_sprite.clone().lines.len();
+        let mut small_sprite_width = 0;
+        for line in small_text_sprite.clone().lines {
+            if line.width() > small_sprite_width {
+                small_sprite_width = line.width();
+            }
+        }
+
+        if small_sprite_width < height.into() && small_sprite_height < width.into() {
+            let small_sprite_x = (width as u16 - small_sprite_width as u16) / 2;
+            let small_sprite_y = (height as u16 - small_sprite_height as u16) / 2;
+            let area = Rect::new(
+                small_sprite_x,
+                small_sprite_y,
+                small_sprite_width as u16,
+                small_sprite_height as u16,
+            );
+            f.render_widget(small_para_sprite, area);
+        }
+    }
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
