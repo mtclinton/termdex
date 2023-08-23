@@ -12,7 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - db-diesel:/var/lib/postgresql/data:rw
-  diesel-pokemon:
+  local-termdex:
     container_name: diesel-pokemon
     stdin_open: true
     tty: true
@@ -26,6 +26,33 @@ services:
       - diesel-pokemon-target:/diesel/target
     depends_on:
       - database-pokemon
+  diesel-pokemon:
+    container_name: diesel-pokemon
+    # stdin_open: true
+    # tty: true
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-pokedex}:${POSTGRES_PASSWORD:-password}@database-pokemon/${POSTGRES_DB:-pokedex}
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./:/pokemon
+      - diesel-pokemon-target:/diesel/target
+    depends_on:
+      - database-pokemon
+  termdex:
+    container_name: termdex
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-pokedex}:${POSTGRES_PASSWORD:-password}@database-pokemon/${POSTGRES_DB:-pokedex}
+    build:
+      context: ./
+      dockerfile: ./TermdexDockerfile
+    depends_on:
+      - diesel-pokemon
+
+
 
 volumes:
   # postgres data
