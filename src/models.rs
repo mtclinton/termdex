@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use serde::Serialize;
 
 #[derive(Debug, Insertable, PartialEq)]
-#[table_name = "pokemon"]
+#[diesel(table_name = pokemon)]
 pub struct NewPokemon {
     pub pokemon_id: i32,
     pub name: String,
@@ -41,7 +41,7 @@ pub struct Pokemon {
 }
 
 #[derive(Debug, Insertable)]
-#[table_name = "pokemon_type"]
+#[diesel(table_name = pokemon_type)]
 pub struct NewPokemonType {
     pub pokemon_id: i32,
     pub type_id: i32,
@@ -55,7 +55,7 @@ pub struct PokemonType {
 }
 
 #[derive(Debug, Insertable, Eq, Hash, PartialEq, Clone)]
-#[table_name = "ptype"]
+#[diesel(table_name = ptype)]
 pub struct NewPType {
     pub name: String,
     pub url: String,
@@ -69,7 +69,7 @@ pub struct PType {
 }
 
 #[derive(Debug, Insertable, PartialEq)]
-#[table_name = "max_stats"]
+#[diesel(table_name = max_stats)]
 pub struct NewMaxStats {
     pub hp: i32,
     pub attack: i32,

@@ -1,8 +1,8 @@
-use tui::{
+use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans, Text},
+    text::{Line, Span, Text},
     widgets::{Block, Borders, Gauge, Paragraph, Wrap},
     Frame,
 };
@@ -147,11 +147,11 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD),
     )];
-    let text = Text::from(Spans::from(h));
+    let text = Text::from(vec![Line::from(h)]);
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::NONE))
-        .wrap(Wrap { trim: true });
+        .wrap(Wrap::trim());
     f.render_widget(input, data_chunks[0]);
 
     let info_chunks = Layout::default()
@@ -169,7 +169,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD),
     )];
-    let text = Text::from(Spans::from(h));
+    let text = Text::from(vec![Line::from(h)]);
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .alignment(Alignment::Center)
@@ -181,7 +181,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD),
     )];
-    let text = Text::from(Spans::from(w));
+    let text = Text::from(vec![Line::from(w)]);
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .alignment(Alignment::Center)
@@ -208,7 +208,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
             )];
-            let text = Text::from(Spans::from(h));
+            let text = Text::from(vec![Line::from(h)]);
             let input = Paragraph::new(text)
                 .style(Style::default().fg(Color::Red))
                 .alignment(Alignment::Center)
@@ -228,7 +228,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
             )];
-            let text = Text::from(Spans::from(h));
+            let text = Text::from(vec![Line::from(h)]);
             let input = Paragraph::new(text)
                 .style(Style::default().fg(Color::Red))
                 .alignment(Alignment::Center)

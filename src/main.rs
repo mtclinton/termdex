@@ -30,7 +30,7 @@ use scraper::Scraper;
 use std::env;
 use std::fmt;
 use std::{error::Error, io};
-use tui::{
+use ratatui::{
     backend::{Backend, CrosstermBackend},
     Terminal,
 };
