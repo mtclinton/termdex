@@ -151,7 +151,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::NONE))
-        .wrap(Wrap::trim());
+        .wrap(Wrap { trim: true });
     f.render_widget(input, data_chunks[0]);
 
     let info_chunks = Layout::default()
