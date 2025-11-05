@@ -221,7 +221,7 @@ pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats)
             .margin(1)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
             .split(info_chunks[1]);
-        for (_index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+        for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
             let h = vec![Span::styled(
                 format!("{}", tui_type),
                 Style::default()
