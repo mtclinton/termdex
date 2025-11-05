@@ -31,4 +31,6 @@ regex = "1.11"
 [dev-dependencies]
 httpmock = "0.8"
 
-tui-input = { version = "0.14", features = ["serde"] }
+[dependencies.tui-input]
+version = "0.14"
+features = ["serde"]

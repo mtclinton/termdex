@@ -39,8 +39,8 @@ pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats)
     let large_sprite = pokemon_db_result.tui_pokemon.large.clone();
     let tui_sprite = large_sprite.into_text();
     let text_sprite = tui_sprite.expect("can't parse large sprite");
-    // ansi-to-tui 2.1 should be compatible with ratatui 0.27
-    let paragraph_sprite = Paragraph::new(text_sprite);
+    // ansi-to-tui 7.0 should be compatible with ratatui 0.29
+    let paragraph_sprite = Paragraph::new(text_sprite.clone());
 
     // add color to not found sprite
     let sprite = paragraph_sprite.style(Style::default().fg(Color::Blue));
@@ -201,7 +201,7 @@ pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats)
                 .as_ref(),
             )
             .split(info_chunks[1]);
-        for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+        for (_index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
             let h = vec![Span::styled(
                 format!("{}", tui_type),
                 Style::default()
@@ -221,7 +221,7 @@ pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats)
             .margin(1)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
             .split(info_chunks[1]);
-        for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+        for (_index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
             let h = vec![Span::styled(
                 format!("{}", tui_type),
                 Style::default()
