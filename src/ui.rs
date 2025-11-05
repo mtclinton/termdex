@@ -30,7 +30,7 @@ pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats)
         .direction(Direction::Horizontal)
         .margin(2)
         .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     let input = Paragraph::new("")
         .style(Style::default().fg(Color::Red))
@@ -115,12 +115,12 @@ pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats)
         );
     f.render_widget(input, chunks[0]);
     // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-    f.set_cursor(
+    f.set_cursor_position((
         // Put cursor past the end of the input text
         chunks[0].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
         // Move one line down, from the border to the input line
         chunks[0].y + 1,
-    );
+    ));
     let input = Paragraph::new("")
         .style(Style::default().fg(Color::Red))
         .block(
@@ -151,7 +151,7 @@ pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats)
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::NONE))
-        .wrap(Wrap { trim: true });
+        .wrap(Wrap::trim());
     f.render_widget(input, data_chunks[0]);
 
     let info_chunks = Layout::default()

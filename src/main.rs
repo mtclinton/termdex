@@ -34,6 +34,7 @@ use ratatui::{
     backend::CrosstermBackend,
     Terminal,
 };
+use ratatui::backend::Backend;
 use tui_input::backend::crossterm::EventHandler;
 
 fn show_pokemon(pokemon_term: String) -> Result<Option<Pokemon>, Box<dyn Error>> {
@@ -177,7 +178,7 @@ fn get_pokemon(app: &App) -> ui::TUIPokemon {
     }
 }
 
-fn run_app(terminal: &mut Terminal, mut app: App) -> io::Result<()> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
         let current_pokemon = get_pokemon(&mut app);
         let ms = get_max_stats();
