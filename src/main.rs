@@ -31,7 +31,7 @@ use std::env;
 use std::fmt;
 use std::{error::Error, io};
 use ratatui::{
-    backend::{Backend, CrosstermBackend},
+    backend::CrosstermBackend,
     Terminal,
 };
 use tui_input::backend::crossterm::EventHandler;
@@ -177,7 +177,7 @@ fn get_pokemon(app: &App) -> ui::TUIPokemon {
     }
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+fn run_app(terminal: &mut Terminal, mut app: App) -> io::Result<()> {
     loop {
         let current_pokemon = get_pokemon(&mut app);
         let ms = get_max_stats();

@@ -1,5 +1,4 @@
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
@@ -25,7 +24,7 @@ pub fn capitalize(s: &str) -> String {
     }
 }
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats) {
+pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats) {
     // show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -40,7 +39,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
     let large_sprite = pokemon_db_result.tui_pokemon.large.clone();
     let tui_sprite = large_sprite.into_text();
     let text_sprite = tui_sprite.expect("can't parse large sprite");
-    let paragraph_sprite = Paragraph::new(text_sprite.clone());
+    // ansi-to-tui 2.1 should be compatible with ratatui 0.27
+    let paragraph_sprite = Paragraph::new(text_sprite);
 
     // add color to not found sprite
     let sprite = paragraph_sprite.style(Style::default().fg(Color::Blue));
@@ -48,9 +48,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
     // f.render_widget(paragraph_sprite, chunks[0]);
     let width = chunks[0].width;
     let height = chunks[0].height;
-    let sprite_height = text_sprite.clone().lines.len();
+    let sprite_height = text_sprite.lines.len();
     let mut sprite_width = 0;
-    for line in text_sprite.clone().lines {
+    for line in &text_sprite.lines {
         if line.width() > sprite_width {
             sprite_width = line.width();
         }
@@ -76,9 +76,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
         // add color to not found sprite
         let small_para_sprite = small_paragraph_sprite.style(Style::default().fg(Color::Blue));
 
-        let small_sprite_height = small_text_sprite.clone().lines.len();
+        let small_sprite_height = small_text_sprite.lines.len();
         let mut small_sprite_width = 0;
-        for line in small_text_sprite.clone().lines {
+        for line in &small_text_sprite.lines {
             if line.width() > small_sprite_width {
                 small_sprite_width = line.width();
             }
