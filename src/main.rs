@@ -30,10 +30,11 @@ use scraper::Scraper;
 use std::env;
 use std::fmt;
 use std::{error::Error, io};
-use tui::{
-    backend::{Backend, CrosstermBackend},
+use ratatui::{
+    backend::CrosstermBackend,
     Terminal,
 };
+use ratatui::backend::Backend;
 use tui_input::backend::crossterm::EventHandler;
 
 fn show_pokemon(pokemon_term: String) -> Result<Option<Pokemon>, Box<dyn Error>> {

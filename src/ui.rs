@@ -1,8 +1,7 @@
-use tui::{
-    backend::Backend,
+use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans, Text},
+    text::{Line, Span, Text},
     widgets::{Block, Borders, Gauge, Paragraph, Wrap},
     Frame,
 };
@@ -25,13 +24,13 @@ pub fn capitalize(s: &str) -> String {
     }
 }
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats) {
+pub fn ui(f: &mut Frame, app: &App, pokemon_db_result: TUIPokemon, ms: MaxStats) {
     // show_border(f, app);
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .margin(2)
         .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     let input = Paragraph::new("")
         .style(Style::default().fg(Color::Red))
@@ -40,6 +39,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
     let large_sprite = pokemon_db_result.tui_pokemon.large.clone();
     let tui_sprite = large_sprite.into_text();
     let text_sprite = tui_sprite.expect("can't parse large sprite");
+    // ansi-to-tui 7.0 should be compatible with ratatui 0.29
     let paragraph_sprite = Paragraph::new(text_sprite.clone());
 
     // add color to not found sprite
@@ -48,9 +48,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
     // f.render_widget(paragraph_sprite, chunks[0]);
     let width = chunks[0].width;
     let height = chunks[0].height;
-    let sprite_height = text_sprite.clone().lines.len();
+    let sprite_height = text_sprite.lines.len();
     let mut sprite_width = 0;
-    for line in text_sprite.clone().lines {
+    for line in &text_sprite.lines {
         if line.width() > sprite_width {
             sprite_width = line.width();
         }
@@ -76,9 +76,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
         // add color to not found sprite
         let small_para_sprite = small_paragraph_sprite.style(Style::default().fg(Color::Blue));
 
-        let small_sprite_height = small_text_sprite.clone().lines.len();
+        let small_sprite_height = small_text_sprite.lines.len();
         let mut small_sprite_width = 0;
-        for line in small_text_sprite.clone().lines {
+        for line in &small_text_sprite.lines {
             if line.width() > small_sprite_width {
                 small_sprite_width = line.width();
             }
@@ -115,12 +115,12 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
         );
     f.render_widget(input, chunks[0]);
     // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-    f.set_cursor(
+    f.set_cursor_position((
         // Put cursor past the end of the input text
         chunks[0].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
         // Move one line down, from the border to the input line
         chunks[0].y + 1,
-    );
+    ));
     let input = Paragraph::new("")
         .style(Style::default().fg(Color::Red))
         .block(
@@ -147,7 +147,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD),
     )];
-    let text = Text::from(Spans::from(h));
+    let text = Text::from(vec![Line::from(h)]);
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .block(Block::default().borders(Borders::NONE))
@@ -169,7 +169,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD),
     )];
-    let text = Text::from(Spans::from(h));
+    let text = Text::from(vec![Line::from(h)]);
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .alignment(Alignment::Center)
@@ -181,7 +181,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD),
     )];
-    let text = Text::from(Spans::from(w));
+    let text = Text::from(vec![Line::from(w)]);
     let input = Paragraph::new(text)
         .style(Style::default().fg(Color::Red))
         .alignment(Alignment::Center)
@@ -201,14 +201,14 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
                 .as_ref(),
             )
             .split(info_chunks[1]);
-        for (index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
+        for (_index, tui_type) in pokemon_db_result.tui_types.iter().enumerate() {
             let h = vec![Span::styled(
                 format!("{}", tui_type),
                 Style::default()
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
             )];
-            let text = Text::from(Spans::from(h));
+            let text = Text::from(vec![Line::from(h)]);
             let input = Paragraph::new(text)
                 .style(Style::default().fg(Color::Red))
                 .alignment(Alignment::Center)
@@ -228,7 +228,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, pokemon_db_result: TUIPokemon
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
             )];
-            let text = Text::from(Spans::from(h));
+            let text = Text::from(vec![Line::from(h)]);
             let input = Paragraph::new(text)
                 .style(Style::default().fg(Color::Red))
                 .alignment(Alignment::Center)
